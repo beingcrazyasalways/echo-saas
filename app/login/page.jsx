@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, signUp, supabase } from '../../lib/supabaseClient';
-import { Brain, Mail, Lock, UserPlus, Users } from 'lucide-react';
+import { signIn, signUp } from '../../lib/supabaseClient';
+import { Brain, Mail, Lock, UserPlus } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,36 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(null);
   const [error, setError] = useState('');
-
-  const demoUsers = [
-    { name: 'Suryansh', email: 'suryansh@echo.ai', initial: 'S' },
-    { name: 'Rudra', email: 'rudra@echo.ai', initial: 'R' },
-    { name: 'Sudhanshu', email: 'sudhanshu@echo.ai', initial: 'S' },
-    { name: 'Nitin', email: 'nitin@echo.ai', initial: 'N' },
-  ];
-
-  const handleDemoLogin = async (user) => {
-    setDemoLoading(user.email);
-    setError('');
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: 'Echo@1234',
-      });
-
-      if (error) throw error;
-      if (data?.session) {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError(`Demo login failed for ${user.name}: ${err.message}`);
-    } finally {
-      setDemoLoading(null);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -144,34 +115,6 @@ export default function LoginPage() {
               <UserPlus size={16} />
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
-          </div>
-
-          <div className="pt-6 border-t border-white/10">
-            <div className="flex items-center gap-2 mb-4 text-gray-400">
-              <Users size={16} />
-              <span className="text-sm font-medium">Demo Users (Quick Login)</span>
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              {demoUsers.map((user) => (
-                <button
-                  key={user.email}
-                  onClick={() => handleDemoLogin(user)}
-                  disabled={demoLoading !== null}
-                  className="group relative flex flex-col items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 hover:border-neon-cyan/30 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-cyan to-neon-purple flex items-center justify-center text-white font-semibold text-sm group-hover:shadow-lg group-hover:shadow-neon-cyan/25 transition-shadow">
-                    {demoLoading === user.email ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      user.initial
-                    )}
-                  </div>
-                  <span className="text-xs text-gray-400 group-hover:text-white transition-colors">
-                    {user.name}
-                  </span>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>

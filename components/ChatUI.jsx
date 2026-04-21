@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Send, Sparkles, X, AlertCircle } from 'lucide-react';
 
-export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSuggestionUpdate, onClose, onAddTask, onDeleteTask }) {
+export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSuggestionUpdate, onClose, onAddTask, onDeleteTask, userEmail, userId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,9 +31,11 @@ export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSugg
         },
         body: JSON.stringify({
           message: userMessage,
-          tasks: tasks || [],
-          emotion: currentEmotion || '',
-          behaviorPatterns: behaviorPatterns || null,
+          tasks,
+          emotion: currentEmotion,
+          behaviorPatterns,
+          userEmail,
+          userId,
         }),
       });
 

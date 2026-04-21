@@ -69,12 +69,26 @@ CREATE TABLE IF NOT EXISTS user_profile (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create user_profiles table for seeded identity system (AI personalization)
+CREATE TABLE IF NOT EXISTS user_profiles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  behavior_profile JSONB DEFAULT '{}',
+  emotion_history_summary JSONB DEFAULT '{}',
+  productivity_patterns JSONB DEFAULT '{}',
+  ai_memory_summary TEXT DEFAULT '',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Enable Row Level Security
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE emotions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_behavior ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for tasks
 DROP POLICY IF EXISTS "Users can view their own tasks" ON tasks;
@@ -144,4 +158,20 @@ CREATE POLICY "Users can insert their own profile"
 DROP POLICY IF EXISTS "Users can update their own profile" ON user_profile;
 CREATE POLICY "Users can update their own profile"
   ON user_profile FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Create policies for user_profiles
+DROP POLICY IF EXISTS "Users can view their own identity profile" ON user_profiles;
+CREATE POLICY "Users can view their own identity profile"
+  ON user_profiles FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own identity profile" ON user_profiles;
+CREATE POLICY "Users can insert their own identity profile"
+  ON user_profiles FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own identity profile" ON user_profiles;
+CREATE POLICY "Users can update their own identity profile"
+  ON user_profiles FOR UPDATE
   USING (auth.uid() = user_id);

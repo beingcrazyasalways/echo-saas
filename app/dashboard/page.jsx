@@ -859,13 +859,19 @@ export default function DashboardPage() {
       {showChat && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-lg">
-            <ChatUI 
-              onClose={toggleChat}
-              currentEmotion={currentEmotion}
+            <ChatUI
               tasks={tasks}
+              currentEmotion={currentEmotion}
               behaviorPatterns={behaviorPatterns}
+              onSuggestionUpdate={(suggestion) => {
+                setSuggestion(suggestion);
+                setShowSuggestionModal(true);
+              }}
+              onClose={toggleChat}
               onAddTask={handleAIAddTask}
               onDeleteTask={handleAIDeleteTask}
+              userEmail={user?.email}
+              userId={user?.id}
             />
           </div>
         </div>
