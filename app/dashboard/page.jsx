@@ -864,7 +864,7 @@ export default function DashboardPage() {
 
       {showChat && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="w-full max-w-lg h-full sm:h-auto">
+          <div className="w-full max-w-lg h-full sm:h-auto max-h-screen overflow-y-auto">
             <ChatUI
               tasks={tasks}
               currentEmotion={currentEmotion}
@@ -884,15 +884,15 @@ export default function DashboardPage() {
       )}
 
       {automationAlert && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="backdrop-blur-xl bg-slate-900/90 border border-white/10 rounded-2xl p-6 max-w-md mx-4 shadow-2xl">
-            <h3 className="text-xl font-semibold text-white mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="backdrop-blur-xl bg-slate-900/90 border border-white/10 rounded-2xl p-4 sm:p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
               {automationAlert.type === 'stress' && '⚠️ Stress Alert'}
               {automationAlert.type === 'inactivity' && '⏰ Inactivity Alert'}
               {automationAlert.type === 'pending' && '📋 Task Suggestion'}
             </h3>
-            <p className="text-gray-300 mb-6">{automationAlert.message}</p>
-            <div className="flex gap-4">
+            <p className="text-sm sm:text-base text-gray-300 mb-4 sm:mb-6">{automationAlert.message}</p>
+            <div className="flex gap-3 sm:gap-4">
               <button
                 onClick={() => {
                   setAutomationAlert(null);
@@ -900,7 +900,7 @@ export default function DashboardPage() {
                     handleToggleTask(automationAlert.task.id, true);
                   }
                 }}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-medium hover:from-teal-600 hover:to-indigo-600 transition-all"
+                className="flex-1 px-4 sm:px-6 py-3 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-medium hover:from-teal-600 hover:to-indigo-600 transition-all text-sm sm:text-base"
               >
                 {automationAlert.type === 'stress' ? 'Take Break' : 'OK'}
               </button>
@@ -916,16 +916,16 @@ export default function DashboardPage() {
       )}
 
       {showSuggestionModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowSuggestionModal(false)}>
-          <div className="glass-card p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <AlertCircle size={24} className="text-neon-cyan" />
-              <h3 className="text-lg font-semibold text-white">AI Suggestion</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowSuggestionModal(false)}>
+          <div className="glass-card p-4 sm:p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <AlertCircle size={20} sm:size={24} className="text-neon-cyan" />
+              <h3 className="text-base sm:text-lg font-semibold text-white">AI Suggestion</h3>
             </div>
-            <p className="text-gray-300 mb-4">{suggestion?.message}</p>
+            <p className="text-sm sm:text-base text-gray-300 mb-3 sm:mb-4">{suggestion?.message}</p>
             <button
               onClick={() => setShowSuggestionModal(false)}
-              className="w-full py-2 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
+              className="w-full py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity text-sm sm:text-base"
             >
               Got it
             </button>

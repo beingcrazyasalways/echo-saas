@@ -342,7 +342,7 @@ export default function AnalyticsPage() {
 
             <div className="glass-card p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Insights</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 rounded-lg border border-white/10">
                   <p className="text-sm text-gray-400 mb-2">Productivity Insight</p>
                   <p className="text-white">
@@ -372,7 +372,7 @@ export default function AnalyticsPage() {
 
             <div className="glass-card p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Task Priority Breakdown</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/30">
                   <p className="text-2xl font-bold text-red-400">
                     {tasks.filter((t) => t.priority === 'high').length}

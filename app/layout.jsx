@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'E.C.H.O - Emotion-Centric Human Optimizer',
   description: 'AI-powered productivity system that adapts tasks based on emotions',
+  viewport: 'width=device-width, initial-scale=1',
 };
 
 export default function RootLayout({ children }) {

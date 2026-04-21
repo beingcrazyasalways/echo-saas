@@ -392,7 +392,7 @@ export default function EmotionPage() {
                       <p className="text-3xl font-bold text-white capitalize">{emotionResult.emotion}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="p-4 rounded-lg bg-white/5">
                         <p className="text-sm text-gray-400 mb-1">Confidence</p>
                         <p className="text-2xl font-bold text-neon-cyan">{Math.round(emotionResult.confidence * 100)}%</p>
