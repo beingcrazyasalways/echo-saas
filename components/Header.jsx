@@ -1,6 +1,6 @@
 'use client';
 
-import { User, Bell, LogOut, Menu } from 'lucide-react';
+import { User, Bell, LogOut, Menu, Clock } from 'lucide-react';
 import { useTimeContext } from '../hooks/useTimeContext';
 
 export default function Header({ user, currentEmotion, onLogout, onMenuToggle }) {
