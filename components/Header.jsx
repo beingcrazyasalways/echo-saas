@@ -1,9 +1,9 @@
 'use client';
 
-import { User, Bell, LogOut } from 'lucide-react';
+import { User, Bell, LogOut, Menu } from 'lucide-react';
 import { useTimeContext } from '../hooks/useTimeContext';
 
-export default function Header({ user, currentEmotion, onLogout }) {
+export default function Header({ user, currentEmotion, onLogout, onMenuToggle }) {
   const { greeting, sessionDuration, formattedTime } = useTimeContext();
 
   const getEmotionBadge = () => {
@@ -20,21 +20,29 @@ export default function Header({ user, currentEmotion, onLogout }) {
   };
 
   return (
-    <header className="h-20 backdrop-blur-xl bg-slate-900/30 border-b border-white/10 flex items-center justify-between px-8">
-      <div>
-        <h2 className="text-2xl font-semibold text-white">
-          {greeting}
-        </h2>
-        <div className="flex items-center gap-4 mt-1">
-          <p className="text-sm text-gray-400">
-            Your AI-powered productivity companion
-          </p>
-          <span className="text-xs text-teal-400">•</span>
-          <p className="text-xs text-gray-500">Active for {sessionDuration}</p>
+    <header className="h-20 backdrop-blur-xl bg-slate-900/30 border-b border-white/10 flex items-center justify-between px-4 sm:px-8">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onMenuToggle}
+          className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+        >
+          <Menu size={24} />
+        </button>
+        <div>
+          <h2 className="text-xl sm:text-2xl font-semibold text-white">
+            {greeting}
+          </h2>
+          <div className="flex items-center gap-2 sm:gap-4 mt-1">
+            <p className="text-xs sm:text-sm text-gray-400">
+              Your AI-powered productivity companion
+            </p>
+            <span className="text-xs text-teal-400 hidden sm:inline">•</span>
+            <p className="text-xs text-gray-500 hidden sm:inline">Active for {sessionDuration}</p>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/5">
           <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
           <span className="text-xs text-gray-400">{formattedTime}</span>

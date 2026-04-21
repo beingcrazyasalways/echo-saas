@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const [streak, setStreak] = useState(0);
   const [xp, setXP] = useState(0);
   const [taskFeedback, setTaskFeedback] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -521,9 +522,13 @@ export default function DashboardPage() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${gradientClass} ${glowClass} transition-all duration-500`}>
-      <Sidebar currentEmotion={currentEmotion} />
+      <Sidebar 
+        currentEmotion={currentEmotion} 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       
-      <div className="ml-72">
+      <div className="lg:ml-72 transition-all duration-300">
         {taskFeedback && (
           <div className={`fixed top-24 right-8 px-4 py-3 rounded-lg shadow-lg z-50 ${
             taskFeedback.type === 'success' 
@@ -544,6 +549,7 @@ export default function DashboardPage() {
           user={user} 
           currentEmotion={currentEmotion} 
           onLogout={handleLogout}
+          onMenuToggle={() => setSidebarOpen(true)}
         />  
         <div className="px-4 sm:px-8 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-6">

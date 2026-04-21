@@ -21,6 +21,7 @@ export default function EmotionPage() {
   const [enableTracking, setEnableTracking] = useState(true);
   const [user, setUser] = useState(null);
   const [currentEmotion, setCurrentEmotion] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -228,9 +229,13 @@ export default function EmotionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      <Sidebar currentEmotion={currentEmotion} />
+      <Sidebar 
+        currentEmotion={currentEmotion} 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       
-      <div className="ml-72">
+      <div className="lg:ml-72">
         <Header 
           user={user} 
           currentEmotion={currentEmotion} 
@@ -238,6 +243,7 @@ export default function EmotionPage() {
             await signOut();
             router.push('/login');
           }}
+          onMenuToggle={() => setSidebarOpen(true)}
         />
         
         <div className="p-4 sm:p-8">

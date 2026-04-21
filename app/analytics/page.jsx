@@ -18,6 +18,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [currentEmotion, setCurrentEmotion] = useState('');
   const [behaviorPatterns, setBehaviorPatterns] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const savedEmotion = localStorage.getItem('currentEmotion');
@@ -117,10 +118,18 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900">
-      <Sidebar currentEmotion={currentEmotion} />
+      <Sidebar 
+        currentEmotion={currentEmotion} 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       
-      <div className="ml-72">
-        <Header user={user} currentEmotion={currentEmotion} />
+      <div className="lg:ml-72">
+        <Header 
+          user={user} 
+          currentEmotion={currentEmotion} 
+          onMenuToggle={() => setSidebarOpen(true)}
+        />
         
         <main className="p-6">
           <div className="space-y-6">
