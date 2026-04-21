@@ -247,18 +247,18 @@ export default function EmotionPage() {
         />
         
         <div className="p-4 sm:p-8">
-          <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
-            <div className="glass-card p-8 mb-6">
-              <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
+          <div className="w-full space-y-6 sm:space-y-8">
+            <div className="glass-card p-4 sm:p-8 mb-6">
+              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
                 Emotion Intelligence
               </h1>
-              <p className="text-gray-400">Let E.C.H.O understand how you're feeling</p>
+              <p className="text-sm sm:text-base text-gray-400">Let E.C.H.O understand how you're feeling</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="glass-card p-6 lg:col-span-2">
-                <h2 className="text-xl font-semibold text-white mb-4">Input Mode</h2>
-                <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="glass-card p-4 sm:p-6 lg:col-span-2">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Input Mode</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                   <button
                     onClick={() => { setMode('camera'); stopCamera(); }}
                     className={`p-4 rounded-lg border-2 transition-all ${
@@ -268,7 +268,7 @@ export default function EmotionPage() {
                     }`}
                   >
                     <Camera className="w-6 h-6 mx-auto mb-2 text-neon-cyan" />
-                    <p className="text-sm text-white">Live Camera</p>
+                    <p className="text-xs sm:text-sm text-white">Live Camera</p>
                   </button>
                   <button
                     onClick={() => { setMode('image'); stopCamera(); }}
@@ -279,7 +279,7 @@ export default function EmotionPage() {
                     }`}
                   >
                     <Upload className="w-6 h-6 mx-auto mb-2 text-neon-cyan" />
-                    <p className="text-sm text-white">Upload Image</p>
+                    <p className="text-xs sm:text-sm text-white">Upload Image</p>
                   </button>
                   <button
                     onClick={() => { setMode('video'); stopCamera(); }}
@@ -290,12 +290,12 @@ export default function EmotionPage() {
                     }`}
                   >
                     <Video className="w-6 h-6 mx-auto mb-2 text-neon-cyan" />
-                    <p className="text-sm text-white">Upload Video</p>
+                    <p className="text-xs sm:text-sm text-white">Upload Video</p>
                   </button>
                 </div>
 
                 <div className="mb-6">
-                  <label className="flex items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                  <label className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
                     <input
                       type="checkbox"
                       checked={enableTracking}
@@ -303,8 +303,8 @@ export default function EmotionPage() {
                       className="w-5 h-5 rounded accent-neon-cyan"
                     />
                     <div>
-                      <p className="text-white font-medium">Enable Emotion Tracking</p>
-                      <p className="text-sm text-gray-400">Your data is used to improve your productivity experience</p>
+                      <p className="text-sm sm:text-base text-white font-medium">Enable Emotion Tracking</p>
+                      <p className="text-xs sm:text-sm text-gray-400">Your data is used to improve your productivity experience</p>
                     </div>
                   </label>
                 </div>
