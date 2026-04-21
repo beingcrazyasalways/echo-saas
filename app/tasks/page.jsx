@@ -128,7 +128,7 @@ export default function TasksPage() {
         onClose={() => setSidebarOpen(false)}
       />
       
-      <div className="lg:ml-72">
+      <div className="w-full">
         <Header 
           user={user} 
           currentEmotion={currentEmotion} 

@@ -235,7 +235,7 @@ export default function EmotionPage() {
         onClose={() => setSidebarOpen(false)}
       />
       
-      <div className="lg:ml-72">
+      <div className="w-full">
         <Header 
           user={user} 
           currentEmotion={currentEmotion} 

@@ -528,7 +528,7 @@ export default function DashboardPage() {
         onClose={() => setSidebarOpen(false)}
       />
       
-      <div className="lg:ml-72 transition-all duration-300">
+      <div className="w-full">
         {taskFeedback && (
           <div className={`fixed top-24 right-8 px-4 py-3 rounded-lg shadow-lg z-50 ${
             taskFeedback.type === 'success' 
