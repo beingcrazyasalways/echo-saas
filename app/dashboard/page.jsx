@@ -568,9 +568,9 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="flex items-start">
-          <main className="flex-1 p-4 sm:p-8">
-            <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+        <div className="flex flex-col lg:flex-row items-start">
+          <main className="flex-1 w-full p-4 sm:p-8">
+            <div className="w-full space-y-6 sm:space-y-8">
               {dailyBriefing && (
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
                   <div className="flex items-center gap-4 mb-4">
@@ -582,7 +582,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">{dailyBriefing.emotionInsight}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 sm:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className="text-2xl sm:text-3xl font-bold text-teal-400">{dailyBriefing.taskCount}</p>
                       <p className="text-xs text-gray-400 mt-1">Tasks</p>
@@ -621,7 +621,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">Behavior insights based on your activity</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className="text-sm text-gray-400 mb-1">🔥 Peak Productivity</p>
                       <p className="text-lg font-semibold capitalize text-white">{behaviorPatterns.peakProductivityTime}</p>
@@ -665,7 +665,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">Your daily activity summary</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className="text-3xl font-bold text-emerald-400">{todayMetrics.tasksCompleted}</p>
                       <p className="text-xs text-gray-400 mt-1">Tasks Completed</p>
@@ -698,7 +698,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-400">Gamification & streaks</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                     <p className="text-sm text-gray-400 mb-1">🔥 Current Streak</p>
                     <p className="text-2xl font-bold text-white">{streak} days</p>
@@ -721,7 +721,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">Detected via camera</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className="text-3xl font-bold capitalize text-white">{latestEmotionData.mood}</p>
                       <p className="text-xs text-gray-400 mt-1">Emotion</p>
@@ -754,20 +754,20 @@ export default function DashboardPage() {
                 onAction={handleSuggestionAction}
               />
 
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                <h3 className="text-xl font-semibold text-white mb-6">Add New Task</h3>
-                <form onSubmit={handleAddTask} className="flex gap-4">
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl">
+                <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Add New Task</h3>
+                <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <input
                     type="text"
                     value={newTaskTitle}
                     onChange={(e) => setNewTaskTitle(e.target.value)}
-                    className="flex-1 px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all"
+                    className="flex-1 px-4 py-3 sm:px-5 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all"
                     placeholder="What needs to be done?"
                   />
                   <select
                     value={newTaskPriority}
                     onChange={(e) => setNewTaskPriority(e.target.value)}
-                    className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all"
+                    className="px-4 py-3 sm:px-5 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all"
                   >
                     <option value="low" className="text-white bg-slate-900">Low</option>
                     <option value="medium" className="text-white bg-slate-900">Medium</option>
@@ -775,7 +775,7 @@ export default function DashboardPage() {
                   </select>
                   <button
                     type="submit"
-                    className="px-8 py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center gap-2"
+                    className="px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
                   >
                     <Plus size={20} />
                     Add
