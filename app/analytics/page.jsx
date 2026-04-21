@@ -401,7 +401,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg font-semibold text-white">Behavior Insights</h3>
                 </div>
                 
-                {behaviorPatterns.insights.length > 0 ? (
+                {behaviorPatterns.insights?.length > 0 ? (
                   <div className="space-y-3">
                     {behaviorPatterns.insights.map((insight, index) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
