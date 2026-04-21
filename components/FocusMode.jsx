@@ -70,7 +70,7 @@ export default function FocusMode({ task, currentEmotion, onClose }) {
           onClick={onClose}
           className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
-          <X size={18} sm:size={20} className="text-gray-400" />
+          <X size={18} className="text-gray-400" />
         </button>
 
         <div className="text-center">
@@ -105,7 +105,7 @@ export default function FocusMode({ task, currentEmotion, onClose }) {
                 onClick={handleStart}
                 className="px-6 sm:px-8 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                <Play size={18} sm:size={20} />
+                <Play size={18} />
                 Start Focus
               </button>
             ) : (
@@ -114,14 +114,14 @@ export default function FocusMode({ task, currentEmotion, onClose }) {
                   onClick={handlePause}
                   className="px-4 sm:px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium hover:bg-white/20 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  {isPaused ? <Play size={18} sm:size={20} /> : <Pause size={18} sm:size={20} />}
+                  {isPaused ? <Play size={18} /> : <Pause size={18} />}
                   {isPaused ? 'Resume' : 'Pause'}
                 </button>
                 <button
                   onClick={handleReset}
                   className="px-4 sm:px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium hover:bg-white/20 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <RotateCcw size={18} sm:size={20} />
+                  <RotateCcw size={18} />
                   Reset
                 </button>
               </>

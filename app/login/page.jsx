@@ -45,7 +45,7 @@ export default function LoginPage() {
         <div className="glass-card p-8 space-y-6">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Brain size={40} sm:size={48} className="text-neon-cyan" />
+              <Brain size={40} className="text-neon-cyan" />
               <h1 className="text-3xl sm:text-4xl font-bold text-white">E.C.H.O</h1>
             </div>
             <p className="text-sm sm:text-base text-gray-400">Emotion-Centric Human Optimizer</p>

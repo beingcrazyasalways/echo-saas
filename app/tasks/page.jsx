@@ -146,7 +146,7 @@ export default function TasksPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Filter size={18} sm:size={20} className="text-gray-400" />
+                  <Filter size={18} className="text-gray-400" />
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
@@ -181,7 +181,7 @@ export default function TasksPage() {
                   type="submit"
                   className="px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
-                  <Plus size={18} sm:size={20} />
+                  <Plus size={18} />
                 </button>
               </form>
 

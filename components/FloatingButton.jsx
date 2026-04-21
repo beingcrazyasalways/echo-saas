@@ -34,7 +34,7 @@ export default function FloatingButton({ onClick, currentEmotion }) {
       onClick={onClick}
       className={`fixed bottom-20 sm:bottom-8 right-4 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${getGradient()} ${getGlow()} shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center z-40`}
     >
-      <MessageSquare size={24} sm:size={28} className="text-white" />
+      <MessageSquare size={24} className="text-white" />
     </button>
   );
 }

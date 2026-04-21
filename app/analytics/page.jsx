@@ -138,7 +138,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <div className="glass-card p-4 sm:p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="text-neon-cyan" size={20} sm:size={24} />
+                  <CheckCircle className="text-neon-cyan" size={20} />
                   <span className="text-xs sm:text-sm text-gray-400">Completion Rate</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold text-white">{completionRate}%</p>
@@ -147,7 +147,7 @@ export default function AnalyticsPage() {
 
               <div className="glass-card p-4 sm:p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Clock className="text-neon-purple" size={20} sm:size={24} />
+                  <Clock className="text-neon-purple" size={20} />
                   <span className="text-xs sm:text-sm text-gray-400">Total Tasks</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold text-white">{totalTasks}</p>
@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
 
               <div className="glass-card p-4 sm:p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <TrendingUp className="text-neon-cyan" size={20} sm:size={24} />
+                  <TrendingUp className="text-neon-cyan" size={20} />
                   <span className="text-xs sm:text-sm text-gray-400">High Priority</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold text-white">{highPriorityTasks}</p>
@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
 
               <div className="glass-card p-4 sm:p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Flame className="text-neon-red" size={20} sm:size={24} />
+                  <Flame className="text-neon-red" size={20} />
                   <span className="text-xs sm:text-sm text-gray-400">Avg Stress</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold text-white">{avgStress}</p>
@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
             {behaviorPatterns && (
               <div className="glass-card p-4 sm:p-6">
                 <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                  <Brain className="text-neon-purple" size={20} sm:size={24} />
+                  <Brain className="text-neon-purple" size={20} />
                   <h3 className="text-base sm:text-lg font-semibold text-white">Auto Insights</h3>
                 </div>
                 <div className="space-y-3 sm:space-y-4">

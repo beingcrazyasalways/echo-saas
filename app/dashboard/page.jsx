@@ -919,7 +919,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowSuggestionModal(false)}>
           <div className="glass-card p-4 sm:p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <AlertCircle size={20} sm:size={24} className="text-neon-cyan" />
+              <AlertCircle size={20} className="text-neon-cyan" />
               <h3 className="text-base sm:text-lg font-semibold text-white">AI Suggestion</h3>
             </div>
             <p className="text-sm sm:text-base text-gray-300 mb-3 sm:mb-4">{suggestion?.message}</p>

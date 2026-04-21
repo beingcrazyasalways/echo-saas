@@ -76,7 +76,7 @@ export default function SettingsPage() {
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-neon-cyan to-neon-purple flex items-center justify-center">
-                    <User size={20} sm:size={24} className="text-white" />
+                    <User size={20} className="text-white" />
                   </div>
                   <div>
                     <p className="text-sm sm:text-base text-white font-medium">{user?.email?.split('@')[0]}</p>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg">
-                  <Mail className="text-neon-cyan" size={20} sm:size={24} />
+                  <Mail className="text-neon-cyan" size={20} />
                   <div>
                     <p className="text-xs sm:text-sm text-gray-400">Email</p>
                     <p className="text-sm sm:text-base text-white">{user?.email}</p>
@@ -93,7 +93,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg">
-                  <Shield className="text-neon-purple" size={20} sm:size={24} />
+                  <Shield className="text-neon-purple" size={20} />
                   <div>
                     <p className="text-xs sm:text-sm text-gray-400">Account Status</p>
                     <p className="text-sm sm:text-base text-green-400">Active</p>
@@ -134,11 +134,11 @@ export default function SettingsPage() {
                   onClick={handleLogout}
                   className="w-full p-3 sm:p-4 bg-white/5 rounded-lg text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <Shield size={18} sm:size={20} />
+                  <Shield size={18} />
                   Sign Out
                 </button>
                 <button className="w-full p-3 sm:p-4 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
-                  <Trash2 size={18} sm:size={20} />
+                  <Trash2 size={18} />
                   Delete Account
                 </button>
               </div>
