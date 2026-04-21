@@ -545,7 +545,7 @@ export default function DashboardPage() {
           currentEmotion={currentEmotion} 
           onLogout={handleLogout}
         />  
-        <div className="px-8 py-4 border-b border-white/10 flex items-center justify-between">
+        <div className="px-4 sm:px-8 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 text-gray-400">
               <Calendar size={16} />
@@ -563,8 +563,8 @@ export default function DashboardPage() {
         </div>
         
         <div className="flex items-start">
-          <main className="flex-1 p-8">
-            <div className="max-w-5xl mx-auto space-y-8">
+          <main className="flex-1 p-4 sm:p-8">
+            <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
               {dailyBriefing && (
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
                   <div className="flex items-center gap-4 mb-4">
@@ -576,13 +576,13 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">{dailyBriefing.emotionInsight}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-3 sm:grid-cols-3 gap-4 mb-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-3xl font-bold text-teal-400">{dailyBriefing.taskCount}</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-teal-400">{dailyBriefing.taskCount}</p>
                       <p className="text-xs text-gray-400 mt-1">Tasks</p>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className={`text-3xl font-bold ${
+                      <p className={`text-2xl sm:text-3xl font-bold ${
                         dailyBriefing.urgency === 'high' ? 'text-amber-400' :
                         dailyBriefing.urgency === 'medium' ? 'text-yellow-400' :
                         'text-emerald-400'
@@ -590,7 +590,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-400 mt-1">Urgency</p>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-3xl font-bold text-violet-400">{dailyBriefing.todayPlan.length}</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-violet-400">{dailyBriefing.todayPlan.length}</p>
                       <p className="text-xs text-gray-400 mt-1">Planned</p>
                     </div>
                   </div>
@@ -857,8 +857,8 @@ export default function DashboardPage() {
       />
 
       {showChat && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="w-full max-w-lg h-full sm:h-auto">
             <ChatUI
               tasks={tasks}
               currentEmotion={currentEmotion}

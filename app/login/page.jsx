@@ -43,14 +43,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
       <div className="w-full max-w-md">
         <div className="glass-card p-8 space-y-6">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <Brain size={48} className="text-neon-cyan" />
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Brain size={40} sm:size={48} className="text-neon-cyan" />
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">E.C.H.O</h1>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
-              E.C.H.O
-            </h1>
-            <p className="text-gray-400 mt-2">Emotion-Centric Human Optimizer</p>
+            <p className="text-sm sm:text-base text-gray-400">Emotion-Centric Human Optimizer</p>
+          </div>
+
+          <div className="glass-card p-6 sm:p-8 mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white mb-6">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
           </div>
 
           {error && (
@@ -98,9 +100,28 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 active:scale-95 min-h-[48px]"
             >
-              {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+              {loading ? (
+                <>
+                  <RefreshCw size={20} className="animate-spin" />
+                  {isSignUp ? 'Creating account...' : 'Signing in...'}
+                </>
+              ) : (
+                <>
+                  {isSignUp ? (
+                    <>
+                      <UserPlus size={20} />
+                      Create Account
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={20} />
+                      Sign In
+                    </>
+                  )}
+                </>
+              )}
             </button>
           </form>
 

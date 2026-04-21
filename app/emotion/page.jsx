@@ -227,14 +227,21 @@ export default function EmotionPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900 ${getEmotionGlow()} transition-all duration-500`}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
       <Sidebar currentEmotion={currentEmotion} />
       
       <div className="ml-72">
-        <Header user={user} currentEmotion={currentEmotion} />
+        <Header 
+          user={user} 
+          currentEmotion={currentEmotion} 
+          onLogout={async () => {
+            await signOut();
+            router.push('/login');
+          }}
+        />
         
-        <main className="p-6">
-          <div className="max-w-6xl mx-auto">
+        <div className="p-4 sm:p-8">
+          <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
             <div className="glass-card p-8 mb-6">
               <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
                 Emotion Intelligence
@@ -478,7 +485,7 @@ export default function EmotionPage() {
               </div>
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
