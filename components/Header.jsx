@@ -43,12 +43,14 @@ export default function Header({ user, currentEmotion, onLogout, onMenuToggle })
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
-        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/5">
-          <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+        <div className="flex items-center gap-2 px-3 py-3 bg-white/5 rounded-xl border border-white/5">
+          <div className={`px-4 py-3 rounded-full border ${getEmotionBadge()} min-h-[44px] flex items-center justify-center`}>
+            <Clock size={16} className="text-gray-400" />
+          </div>
           <span className="text-xs text-gray-400">{formattedTime}</span>
         </div>
         {currentEmotion && (
-          <div className={`px-5 py-2.5 rounded-full border ${getEmotionBadge()}`}>
+          <div className={`px-5 py-3 rounded-full border ${getEmotionBadge()} min-h-[44px] flex items-center justify-center`}>
             <span className="text-sm font-medium capitalize">{currentEmotion}</span>
           </div>
         )}

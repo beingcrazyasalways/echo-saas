@@ -110,7 +110,7 @@ export default function SettingsPage() {
                     <p className="text-sm sm:text-base text-white">Email Notifications</p>
                     <p className="text-xs sm:text-sm text-gray-400">Receive task reminders</p>
                   </div>
-                  <button className="px-3 py-2 sm:px-4 sm:py-2 bg-neon-cyan/20 text-neon-cyan rounded-lg hover:bg-neon-cyan/30 transition-colors text-xs sm:text-sm">
+                  <button className="px-4 py-3 sm:px-4 sm:py-3 bg-neon-cyan/20 text-neon-cyan rounded-lg hover:bg-neon-cyan/30 transition-colors text-xs sm:text-sm min-h-[44px] flex items-center justify-center">
                     Enabled
                   </button>
                 </div>
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                     <p className="text-sm sm:text-base text-white">Dark Mode</p>
                     <p className="text-xs sm:text-sm text-gray-400">Always enabled</p>
                   </div>
-                  <button className="px-3 py-2 sm:px-4 sm:py-2 bg-neon-purple/20 text-neon-purple rounded-lg text-xs sm:text-sm">
+                  <button className="px-4 py-3 sm:px-4 sm:py-3 bg-neon-purple/20 text-neon-purple rounded-lg text-xs sm:text-sm min-h-[44px] flex items-center justify-center">
                     Fixed
                   </button>
                 </div>
