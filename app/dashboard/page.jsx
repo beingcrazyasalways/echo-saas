@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, signOut } from '../../lib/supabaseClient';
-import { getCurrentUser, getSession } from '../../lib/supabaseClient';
+import { supabase, signOut, getCurrentUser } from '../../lib/supabaseClient';
 import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '../../lib/tasks';
 import { logEmotion, getLatestEmotion } from '../../lib/emotions';
 import { generateSuggestion, getEmotionGlow } from '../../lib/aiSuggestions';
 import { logActivity, fetchRecentActivities, getTodayActivities, getLastVisit } from '../../lib/activities';
 import { prioritizeTasks, analyzeUserState, generateDailyBriefing, generateMicroNudge, shouldTriggerFocusMode } from '../../lib/proactiveAI';
 import { analyzeBehaviorPatterns, getUserProfile, updateDailySummary, calculateProductivityScore, logTaskBehavior, logEmotionBehavior, logSessionBehavior, getTodayMetrics, calculateStreak, calculateXP } from '../../lib/behaviorIntelligence';
+import logger from '../../lib/logger';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import TaskList from '../../components/TaskList';
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   const toggleChat = () => {
     const newState = !showChat;
     setShowChat(newState);
-    console.log('[Chat] Modal state changed:', newState);
+    logger.chat('Modal state changed:', { state: newState });
   };
   const [showFocusMode, setShowFocusMode] = useState(false);
   const [dailyBriefing, setDailyBriefing] = useState(null);
@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const [streak, setStreak] = useState(0);
   const [xp, setXP] = useState(0);
   const [taskFeedback, setTaskFeedback] = useState(null);
+  const [addingTask, setAddingTask] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -208,7 +209,7 @@ export default function DashboardPage() {
       await signOut();
       router.push('/login');
     } catch (error) {
-      console.error('[Auth] Logout error:', error);
+      logger.error('[Auth] Logout error:', { error });
     }
   };
 
@@ -252,7 +253,7 @@ export default function DashboardPage() {
       const patterns = await analyzeBehaviorPatterns(user.id);
       setBehaviorPatterns(patterns);
     } catch (error) {
-      console.error('Error loading behavior patterns:', error);
+      logger.error('Error loading behavior patterns:', { error });
       setBehaviorPatterns(null);
     }
   };
@@ -263,7 +264,7 @@ export default function DashboardPage() {
       const { data } = await getUserProfile(user.id);
       setUserProfile(data);
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      logger.error('Error loading user profile:', { error });
       setUserProfile(null);
     }
   };
@@ -274,7 +275,7 @@ export default function DashboardPage() {
       const score = await calculateProductivityScore(user.id);
       setProductivityScore(score);
     } catch (error) {
-      console.error('Error calculating productivity score:', error);
+      logger.error('Error calculating productivity score:', { error });
       setProductivityScore(50);
     }
   };
@@ -285,7 +286,7 @@ export default function DashboardPage() {
       const metrics = await getTodayMetrics(user.id);
       setTodayMetrics(metrics);
     } catch (error) {
-      console.error('Error loading today metrics:', error);
+      logger.error('Error loading today metrics:', { error });
       setTodayMetrics(null);
     }
   };
@@ -296,7 +297,7 @@ export default function DashboardPage() {
       const streakCount = await calculateStreak(user.id);
       setStreak(streakCount);
     } catch (error) {
-      console.error('Error calculating streak:', error);
+      logger.error('Error calculating streak:', { error });
       setStreak(0);
     }
   };
@@ -307,7 +308,7 @@ export default function DashboardPage() {
       const xpCount = await calculateXP(user.id);
       setXP(xpCount);
     } catch (error) {
-      console.error('Error calculating XP:', error);
+      logger.error('Error calculating XP:', { error });
       setXP(0);
     }
   };
@@ -319,7 +320,7 @@ export default function DashboardPage() {
       setRecentActivities(data || []);
       await logActivity(user.id, 'dashboard_visit');
     } catch (error) {
-      console.error('Error loading activities:', error);
+      logger.error('Error loading activities:', { error });
       setRecentActivities([]);
     }
   };
@@ -336,7 +337,7 @@ export default function DashboardPage() {
         setDailyBriefing(briefing);
       }
     } catch (error) {
-      console.error('Error checking daily briefing:', error);
+      logger.error('Error checking daily briefing:', { error });
     }
   };
 
@@ -364,13 +365,14 @@ export default function DashboardPage() {
       const newSuggestion = generateSuggestion(tasks, currentEmotion);
       setSuggestion(newSuggestion);
     } catch (error) {
-      console.error('Error in proactive analysis:', error);
+      logger.error('Error in proactive analysis:', { error });
     }
   };
 
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!user || !newTaskTitle.trim()) return;
+    setAddingTask(true);
     try {
       const { data } = await addTask(user.id, newTaskTitle.trim(), newTaskPriority);
       if (data) {
@@ -383,9 +385,11 @@ export default function DashboardPage() {
         setTimeout(() => setTaskFeedback(null), 2000);
       }
     } catch (error) {
-      console.error('Error adding task:', error);
+      logger.error('Error adding task:', { error });
       setTaskFeedback({ type: 'error', message: 'Failed to add task' });
       setTimeout(() => setTaskFeedback(null), 2000);
+    } finally {
+      setAddingTask(false);
     }
   };
 
@@ -444,7 +448,7 @@ export default function DashboardPage() {
   };
 
   const handleSuggestionAction = (task) => {
-    console.log('Focus on task:', task);
+    logger.info('Focus on task:', { task });
   };
 
   const handleAISuggestionUpdate = (newSuggestion) => {
@@ -453,7 +457,7 @@ export default function DashboardPage() {
 
   const handleAIAddTask = async (title, priority = 'medium') => {
     if (!user || !title.trim()) return;
-    console.log('[Task] AI requesting to add task:', title, priority);
+    logger.task('AI requesting to add task:', { title, priority });
     try {
       const { data } = await addTask(user.id, title.trim(), priority);
       if (data) {
@@ -461,16 +465,16 @@ export default function DashboardPage() {
         await logActivity(user.id, 'task_added', data[0].id, currentEmotion);
         setLastActivityTime(Date.now());
         runProactiveAnalysis();
-        console.log('[Task] Task added successfully via AI:', data[0].title);
+        logger.task('Task added successfully via AI:', { title: data[0].title });
       }
     } catch (error) {
-      console.error('[Task] Error adding task via AI:', error);
+      logger.error('[Task] Error adding task via AI:', error);
     }
   };
 
   const handleAIDeleteTask = async (title) => {
     if (!user || !title.trim()) return;
-    console.log('[Task] AI requesting to delete task:', title);
+    logger.task('AI requesting to delete task:', { title });
     try {
       const taskToDelete = tasks.find(t => t.title.toLowerCase() === title.toLowerCase());
       if (taskToDelete) {
@@ -479,12 +483,12 @@ export default function DashboardPage() {
         await logActivity(user.id, 'task_deleted', taskToDelete.id, currentEmotion);
         setLastActivityTime(Date.now());
         runProactiveAnalysis();
-        console.log('[Task] Task deleted successfully via AI:', taskToDelete.title);
+        logger.task('Task deleted successfully via AI:', { title: taskToDelete.title });
       } else {
-        console.warn('[Task] Task not found for deletion:', title);
+        logger.warn('[Task] Task not found for deletion:', { title });
       }
     } catch (error) {
-      console.error('[Task] Error deleting task via AI:', error);
+      logger.error('[Task] Error deleting task via AI:', { error });
     }
   };
 
@@ -529,7 +533,7 @@ export default function DashboardPage() {
           onClose={() => setSidebarOpen(false)}
         />
 
-        <div className="flex-1 w-full min-w-0">
+        <div className="flex-1 w-full min-w-0 overflow-x-hidden">
         {taskFeedback && (
           <div className={`fixed top-24 right-8 px-4 py-3 rounded-lg shadow-lg z-50 ${
             taskFeedback.type === 'success' 
@@ -569,83 +573,48 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="flex flex-col lg:flex-row items-start">
-          <main className="flex-1 w-full p-4 sm:p-8">
-            <div className="w-full space-y-6 sm:space-y-8">
-              {dailyBriefing && (
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20">
-                      <Zap size={24} className="text-teal-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-white">{dailyBriefing.greeting}</h3>
-                      <p className="text-sm text-gray-400">{dailyBriefing.emotionInsight}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-2xl sm:text-3xl font-bold text-teal-400">{dailyBriefing.taskCount}</p>
-                      <p className="text-xs text-gray-400 mt-1">Tasks</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className={`text-2xl sm:text-3xl font-bold ${
-                        dailyBriefing.urgency === 'high' ? 'text-amber-400' :
-                        dailyBriefing.urgency === 'medium' ? 'text-yellow-400' :
-                        'text-emerald-400'
-                      }`}>{dailyBriefing.urgency}</p>
-                      <p className="text-xs text-gray-400 mt-1">Urgency</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-2xl sm:text-3xl font-bold text-violet-400">{dailyBriefing.todayPlan.length}</p>
-                      <p className="text-xs text-gray-400 mt-1">Planned</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-300 mb-3">{dailyBriefing.recommendation}</p>
-                  <button
-                    onClick={() => setDailyBriefing(null)}
-                    className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              )}
-
+        <main className="flex-1 w-full p-3 sm:p-4 lg:p-5">
+            <div className="w-full space-y-3 sm:space-y-4 lg:space-y-5">
+              <EmotionCard
+                currentEmotion={currentEmotion}
+                onEmotionChange={handleEmotionChange}
+                emotionData={latestEmotionData}
+              />
               {behaviorPatterns && (
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-                      <Target size={24} className="text-amber-400" />
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
+                      <Target size={20} className="text-amber-400" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">Your Patterns</h3>
-                      <p className="text-sm text-gray-400">Behavior insights based on your activity</p>
+                      <h3 className="text-lg font-semibold text-white">Your Patterns</h3>
+                      <p className="text-xs text-gray-400">Behavior insights based on your activity</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-sm text-gray-400 mb-1">🔥 Peak Productivity</p>
-                      <p className="text-lg font-semibold capitalize text-white">{behaviorPatterns.peakProductivityTime}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-xs text-gray-400 mb-1">🔥 Peak Productivity</p>
+                      <p className="text-base font-semibold capitalize text-white">{behaviorPatterns.peakProductivityTime}</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-sm text-gray-400 mb-1">⚠️ High Stress Time</p>
-                      <p className="text-lg font-semibold capitalize text-white">{behaviorPatterns.highStressTime}</p>
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-xs text-gray-400 mb-1">⚠️ High Stress Time</p>
+                      <p className="text-base font-semibold capitalize text-white">{behaviorPatterns.highStressTime}</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-sm text-gray-400 mb-1">🧠 Work Style</p>
-                      <p className="text-lg font-semibold text-white">{behaviorPatterns.workStyle}</p>
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-xs text-gray-400 mb-1">🧠 Work Style</p>
+                      <p className="text-base font-semibold text-white">{behaviorPatterns.workStyle}</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-sm text-gray-400 mb-1">📊 Productivity Score</p>
-                      <p className="text-lg font-semibold text-white">{productivityScore}/100</p>
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-xs text-gray-400 mb-1">📊 Productivity Score</p>
+                      <p className="text-base font-semibold text-white">{productivityScore}/100</p>
                     </div>
                   </div>
                   {behaviorPatterns.weakAreas && behaviorPatterns.weakAreas.length > 0 && (
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-sm text-gray-400 mb-2">📉 Areas to Improve:</p>
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-xs text-gray-400 mb-2">📉 Areas to Improve:</p>
                       <div className="flex flex-wrap gap-2">
                         {behaviorPatterns.weakAreas.map((area, index) => (
-                          <span key={index} className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm">
+                          <span key={index} className="px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full text-xs">
                             {area}
                           </span>
                         ))}
@@ -656,63 +625,205 @@ export default function DashboardPage() {
               )}
 
               {todayMetrics && (
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20">
-                      <Flame size={24} className="text-emerald-400" />
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20">
+                      <Flame size={20} className="text-emerald-400" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">Today's Progress</h3>
-                      <p className="text-sm text-gray-400">Your daily activity summary</p>
+                      <h3 className="text-lg font-semibold text-white">Today's Progress</h3>
+                      <p className="text-xs text-gray-400">Your daily activity summary</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-3xl font-bold text-emerald-400">{todayMetrics.tasksCompleted}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-2xl font-bold text-emerald-400">{todayMetrics.tasksCompleted}</p>
                       <p className="text-xs text-gray-400 mt-1">Tasks Completed</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-3xl font-bold text-teal-400">{todayMetrics.emotionLogs}</p>
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-2xl font-bold text-teal-400">{todayMetrics.emotionLogs}</p>
                       <p className="text-xs text-gray-400 mt-1">Emotion Logs</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-3xl font-bold text-violet-400">{todayMetrics.focusTimeMinutes}m</p>
+                    <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-2xl font-bold text-violet-400">{todayMetrics.focusTimeMinutes}m</p>
                       <p className="text-xs text-gray-400 mt-1">Focus Time</p>
                     </div>
                   </div>
                   {todayMetrics.dominantMood && (
-                    <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-sm text-gray-400 mb-1">Dominant Mood Today</p>
-                      <p className="text-lg font-semibold capitalize text-white">{todayMetrics.dominantMood}</p>
+                    <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                      <p className="text-xs text-gray-400 mb-1">Dominant Mood Today</p>
+                      <p className="text-base font-semibold capitalize text-white">{todayMetrics.dominantMood}</p>
                     </div>
                   )}
                 </div>
               )}
 
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-                    <Target size={24} className="text-amber-400" />
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
+                    <Target size={20} className="text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white">Your Achievements</h3>
-                    <p className="text-sm text-gray-400">Gamification & streaks</p>
+                    <h3 className="text-lg font-semibold text-white">Your Achievements</h3>
+                    <p className="text-xs text-gray-400">Gamification & streaks</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-sm text-gray-400 mb-1">🔥 Current Streak</p>
-                    <p className="text-2xl font-bold text-white">{streak} days</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <p className="text-xs text-gray-400 mb-1">🔥 Current Streak</p>
+                    <p className="text-xl font-bold text-white">{streak} days</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-sm text-gray-400 mb-1">⭐ Total XP</p>
-                    <p className="text-2xl font-bold text-white">{xp} XP</p>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <p className="text-xs text-gray-400 mb-1">⭐ Total XP</p>
+                    <p className="text-xl font-bold text-white">{xp} XP</p>
                   </div>
                 </div>
               </div>
 
+              <SuggestionCard
+                suggestion={suggestion}
+                onAction={handleSuggestionAction}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+                {dailyBriefing && (
+                  <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20">
+                        <Zap size={20} className="text-teal-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-semibold text-white">{dailyBriefing.greeting}</h3>
+                        <p className="text-xs text-gray-400">{dailyBriefing.emotionInsight}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+                      <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                        <p className="text-xl sm:text-2xl font-bold text-teal-400">{dailyBriefing.taskCount}</p>
+                        <p className="text-xs text-gray-400 mt-1">Tasks</p>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                        <p className={`text-xl sm:text-2xl font-bold ${
+                          dailyBriefing.urgency === 'high' ? 'text-amber-400' :
+                          dailyBriefing.urgency === 'medium' ? 'text-yellow-400' :
+                          'text-emerald-400'
+                        }`}>{dailyBriefing.urgency}</p>
+                        <p className="text-xs text-gray-400 mt-1">Urgency</p>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/5">
+                        <p className="text-xl sm:text-2xl font-bold text-violet-400">{dailyBriefing.todayPlan.length}</p>
+                        <p className="text-xs text-gray-400 mt-1">Planned</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-300 mb-2">{dailyBriefing.recommendation}</p>
+                    <button
+                      onClick={() => setDailyBriefing(null)}
+                      className="text-xs text-teal-400 hover:text-teal-300 transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
+
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Add New Task</h3>
+                  <form onSubmit={handleAddTask} className="flex flex-col gap-2 sm:gap-3">
+                    <input
+                      type="text"
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all text-sm"
+                      placeholder="What needs to be done?"
+                    />
+                    <select
+                      value={newTaskPriority}
+                      onChange={(e) => setNewTaskPriority(e.target.value)}
+                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all text-sm"
+                    >
+                      <option value="low" className="text-white bg-slate-900">Low</option>
+                      <option value="medium" className="text-white bg-slate-900">Medium</option>
+                      <option value="high" className="text-white bg-slate-900">High</option>
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={addingTask}
+                      className="px-4 py-2 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    >
+                      {addingTask ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Plus size={16} />
+                      )}
+                      Add
+                    </button>
+                  </form>
+                </div>
+
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base sm:text-lg font-semibold text-white">Your Tasks</h3>
+                    {prioritizedTasks.length > 0 && (
+                      <button
+                        onClick={() => setShowFocusMode(true)}
+                        className="px-2 sm:px-3 py-1 sm:py-2 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-medium hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center gap-2 text-xs"
+                      >
+                        <Zap size={14} />
+                        Focus Mode
+                      </button>
+                    )}
+                  </div>
+                  <TaskList
+                    tasks={tasks}
+                    onToggle={handleToggleTask}
+                    onDelete={handleDeleteTask}
+                    onUpdatePriority={handleUpdatePriority}
+                    currentEmotion={currentEmotion}
+                  />
+                </div>
+
+                {emotionHistory.length > 0 && (
+                  <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Emotion History</h3>
+                    <div className="space-y-2 sm:space-y-3">
+                      {emotionHistory.slice(0, 5).map((emotion) => (
+                        <div key={emotion.id} className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-all">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            {emotion.source === 'detection' ? (
+                              <Camera size={14} className="text-teal-400" />
+                            ) : (
+                              <Flame size={14} className="text-amber-400" />
+                            )}
+                            <div>
+                              <p className="text-white font-medium capitalize text-xs sm:text-sm">{emotion.mood}</p>
+                              {emotion.source === 'detection' && emotion.confidence && (
+                                <p className="text-xs text-gray-400">Confidence: {Math.round(emotion.confidence * 100)}%</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-2 justify-end">
+                              <Flame size={12} className="text-amber-400" />
+                              <span className="text-xs text-gray-400">{emotion.stress_score || emotion.stress_level}%</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(emotion.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => router.push('/analytics')}
+                      className="mt-3 sm:mt-4 text-xs text-teal-400 hover:text-teal-300 transition-colors"
+                    >
+                      View full analytics →
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {latestEmotionData && latestEmotionData.source === 'detection' && (
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20">
                       <Camera size={24} className="text-teal-400" />
@@ -722,18 +833,18 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">Detected via camera</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                    <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className="text-3xl font-bold capitalize text-white">{latestEmotionData.mood}</p>
                       <p className="text-xs text-gray-400 mt-1">Emotion</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className="text-3xl font-bold text-teal-400">
                         {latestEmotionData.confidence ? Math.round(latestEmotionData.confidence * 100) : 50}%
                       </p>
                       <p className="text-xs text-gray-400 mt-1">Confidence</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5">
                       <p className={`text-3xl font-bold ${
                         (latestEmotionData.stress_score || latestEmotionData.stress_level) > 60 ? 'text-amber-400' :
                         (latestEmotionData.stress_score || latestEmotionData.stress_level) > 40 ? 'text-yellow-400' :
@@ -749,114 +860,11 @@ export default function DashboardPage() {
                   </p>
                 </div>
               )}
-
-              <SuggestionCard 
-                suggestion={suggestion} 
-                onAction={handleSuggestionAction}
-              />
-
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl">
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Add New Task</h3>
-                <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <input
-                    type="text"
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    className="flex-1 px-4 py-3 sm:px-5 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all"
-                    placeholder="What needs to be done?"
-                  />
-                  <select
-                    value={newTaskPriority}
-                    onChange={(e) => setNewTaskPriority(e.target.value)}
-                    className="px-4 py-3 sm:px-5 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20 transition-all"
-                  >
-                    <option value="low" className="text-white bg-slate-900">Low</option>
-                    <option value="medium" className="text-white bg-slate-900">Medium</option>
-                    <option value="high" className="text-white bg-slate-900">High</option>
-                  </select>
-                  <button
-                    type="submit"
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
-                  >
-                    <Plus size={20} />
-                    Add
-                  </button>
-                </form>
-              </div>
-
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-white">Your Tasks</h3>
-                  {prioritizedTasks.length > 0 && (
-                    <button
-                      onClick={() => setShowFocusMode(true)}
-                      className="px-5 py-3 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-medium hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center gap-2"
-                    >
-                      <Zap size={18} />
-                      Focus Mode
-                    </button>
-                  )}
-                </div>
-                <TaskList
-                  tasks={tasks}
-                  onToggle={handleToggleTask}
-                  onDelete={handleDeleteTask}
-                  onUpdatePriority={handleUpdatePriority}
-                  currentEmotion={currentEmotion}
-                />
-              </div>
-
-              {emotionHistory.length > 0 && (
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                  <h3 className="text-xl font-semibold text-white mb-6">Emotion History</h3>
-                  <div className="space-y-4">
-                    {emotionHistory.slice(0, 5).map((emotion) => (
-                      <div key={emotion.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-all">
-                        <div className="flex items-center gap-4">
-                          {emotion.source === 'detection' ? (
-                            <Camera size={18} className="text-teal-400" />
-                          ) : (
-                            <Flame size={18} className="text-amber-400" />
-                          )}
-                          <div>
-                            <p className="text-white font-medium capitalize">{emotion.mood}</p>
-                            {emotion.source === 'detection' && emotion.confidence && (
-                              <p className="text-xs text-gray-400">Confidence: {Math.round(emotion.confidence * 100)}%</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center gap-2 justify-end">
-                            <Flame size={14} className="text-amber-400" />
-                            <span className="text-sm text-gray-400">{emotion.stress_score || emotion.stress_level}%</span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(emotion.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => router.push('/analytics')}
-                    className="mt-6 text-sm text-teal-400 hover:text-teal-300 transition-colors"
-                  >
-                    View full analytics →
-                  </button>
-                </div>
-              )}
             </div>
           </main>
 
-          <RightPanel>
-            <EmotionCard 
-              currentEmotion={currentEmotion} 
-              onEmotionChange={handleEmotionChange}
-              emotionData={latestEmotionData}
-            />
-          </RightPanel>
+          <RightPanel />
         </div>
-      </div>
 
       <FloatingButton 
         onClick={toggleChat}
@@ -949,7 +957,6 @@ export default function DashboardPage() {
         />
       )}
       </div>
-    </div>
     </div>
   );
 }

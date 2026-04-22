@@ -9,9 +9,7 @@ import {
   Settings, 
   LogOut,
   Brain,
-  Camera,
-  X,
-  Menu
+  Camera
 } from 'lucide-react';
 
 export default function Sidebar({ currentEmotion, isOpen, onClose }) {
@@ -43,35 +41,18 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
 
   return (
     <>
-      {/* Mobile overlay */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
-
-      {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-30
-        w-72 h-screen backdrop-blur-xl bg-slate-900/50 border-r border-white/10 flex flex-col
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-      `}>
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-400 to-indigo-400 bg-clip-text text-transparent">
-              E.C.H.O
-            </h1>
-            <p className="text-xs text-gray-400 mt-2 tracking-wider uppercase">Emotion-Centric Optimizer</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
-          >
-            <X size={24} />
-          </button>
+      <div className={`w-72 h-screen backdrop-blur-xl bg-slate-900/50 border-r border-white/10 flex flex-col lg:static lg:left-auto lg:inset-auto fixed left-0 top-0 z-50 lg:z-auto transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="p-8 border-b border-white/10">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-400 to-indigo-400 bg-clip-text text-transparent">
+            E.C.H.O
+          </h1>
+          <p className="text-xs text-gray-400 mt-2 tracking-wider uppercase">Emotion-Centric Optimizer</p>
         </div>
 
         <nav className="flex-1 p-6 space-y-2">
@@ -81,10 +62,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
             return (
               <button
                 key={item.path}
-                onClick={() => {
-                  router.push(item.path);
-                  onClose();
-                }}
+                onClick={() => router.push(item.path)}
                 className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-r from-teal-500/20 to-indigo-500/20 text-white border border-teal-400/30 shadow-lg shadow-teal-500/10'

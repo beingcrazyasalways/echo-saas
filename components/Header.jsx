@@ -1,9 +1,9 @@
 'use client';
 
-import { User, Bell, LogOut, Menu, Clock } from 'lucide-react';
+import { User, Bell, Menu } from 'lucide-react';
 import { useTimeContext } from '../hooks/useTimeContext';
 
-export default function Header({ user, currentEmotion, onLogout, onMenuToggle }) {
+export default function Header({ user, currentEmotion, onMenuToggle }) {
   const { greeting, sessionDuration, formattedTime } = useTimeContext();
 
   const getEmotionBadge = () => {
@@ -24,48 +24,40 @@ export default function Header({ user, currentEmotion, onLogout, onMenuToggle })
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+          className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
-          <Menu size={24} />
+          <Menu size={24} className="text-white" />
         </button>
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-white">
             {greeting}
           </h2>
-          <div className="flex items-center gap-2 sm:gap-4 mt-1">
-            <p className="text-xs sm:text-sm text-gray-400">
+          <div className="flex items-center gap-4 mt-1">
+            <p className="text-sm text-gray-400 hidden sm:block">
               Your AI-powered productivity companion
             </p>
-            <span className="text-xs text-teal-400 hidden sm:inline">•</span>
-            <p className="text-xs text-gray-500 hidden sm:inline">Active for {sessionDuration}</p>
+            <span className="text-xs text-teal-400 hidden sm:block">•</span>
+            <p className="text-xs text-gray-500 hidden sm:block">Active for {sessionDuration}</p>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
-        <div className="flex items-center gap-2 px-3 py-3 bg-white/5 rounded-xl border border-white/5">
-          <div className={`px-4 py-3 rounded-full border ${getEmotionBadge()} min-h-[44px] flex items-center justify-center`}>
-            <Clock size={16} className="text-gray-400" />
-          </div>
+        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/5 hidden sm:flex">
+          <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
           <span className="text-xs text-gray-400">{formattedTime}</span>
         </div>
         {currentEmotion && (
-          <div className={`px-5 py-3 rounded-full border ${getEmotionBadge()} min-h-[44px] flex items-center justify-center`}>
+          <div className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-full border ${getEmotionBadge()} hidden sm:block`}>
             <span className="text-sm font-medium capitalize">{currentEmotion}</span>
           </div>
         )}
-        <button className="p-3 rounded-xl hover:bg-white/10 transition-colors">
+        <button className="p-2 sm:p-3 rounded-xl hover:bg-white/10 transition-colors hidden sm:block">
           <Bell size={20} className="text-gray-400" />
         </button>
-        <button 
-          onClick={onLogout}
-          className="p-3 rounded-xl hover:bg-white/10 transition-colors"
-          title="Logout"
-        >
-          <LogOut size={20} className="text-gray-400" />
-        </button>
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
-          <User size={24} className="text-white" />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-teal-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
+          <User size={20} className="text-white sm:hidden" />
+          <User size={24} className="text-white hidden sm:block" />
         </div>
       </div>
     </header>

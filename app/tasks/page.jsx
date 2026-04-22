@@ -123,35 +123,33 @@ export default function TasksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900">
       <div className="flex flex-col lg:flex-row">
-        <Sidebar
+        <Sidebar 
           currentEmotion={currentEmotion}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-
-        <div className="flex-1 w-full min-w-0">
+        <div className="flex-1 w-full min-w-0 overflow-x-hidden">
         <Header 
           user={user} 
-          currentEmotion={currentEmotion} 
+          currentEmotion={currentEmotion}
           onMenuToggle={() => setSidebarOpen(true)}
         />
-        
         <main className="p-4 sm:p-6">
-          <div className="space-y-4 sm:space-y-6">
-            <div className="glass-card p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+          <div className="space-y-6">
+            <div className="glass-card p-6">
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-white">Tasks</h2>
-                  <p className="text-sm sm:text-base text-gray-400">
+                  <h2 className="text-2xl font-bold text-white">Tasks</h2>
+                  <p className="text-gray-400">
                     {completedCount} of {totalCount} tasks completed
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Filter size={18} className="text-gray-400" />
+                  <Filter size={20} className="text-gray-400" />
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className="px-3 py-2 sm:px-4 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-neon-cyan/50 transition-colors"
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-neon-cyan/50 transition-colors"
                   >
                     <option value="all">All Tasks</option>
                     <option value="active">Active</option>
@@ -161,18 +159,18 @@ export default function TasksPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+              <form onSubmit={handleAddTask} className="flex gap-3 mb-6">
                 <input
                   type="text"
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan/50 transition-colors text-sm sm:text-base"
+                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan/50 transition-colors"
                   placeholder="What needs to be done?"
                 />
                 <select
                   value={newTaskPriority}
                   onChange={(e) => setNewTaskPriority(e.target.value)}
-                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-neon-cyan/50 transition-colors text-sm sm:text-base"
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-neon-cyan/50 transition-colors"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -180,9 +178,10 @@ export default function TasksPage() {
                 </select>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-semibold hover:opacity-90 transition-opacity flex items-center gap-2"
                 >
-                  <Plus size={18} />
+                  <Plus size={20} />
+                  Add
                 </button>
               </form>
 

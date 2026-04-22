@@ -17,8 +17,8 @@ export default function AnalyticsPage() {
   const [emotions, setEmotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentEmotion, setCurrentEmotion] = useState('');
-  const [behaviorPatterns, setBehaviorPatterns] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [behaviorPatterns, setBehaviorPatterns] = useState(null);
 
   useEffect(() => {
     const savedEmotion = localStorage.getItem('currentEmotion');
@@ -119,86 +119,85 @@ export default function AnalyticsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900">
       <div className="flex flex-col lg:flex-row">
-        <Sidebar
+        <Sidebar 
           currentEmotion={currentEmotion}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-
-        <div className="flex-1 w-full min-w-0">
+        <div className="flex-1 w-full min-w-0 overflow-x-hidden">
         <Header 
           user={user} 
-          currentEmotion={currentEmotion} 
+          currentEmotion={currentEmotion}
           onMenuToggle={() => setSidebarOpen(true)}
         />
         
         <main className="p-4 sm:p-6">
-          <div className="space-y-4 sm:space-y-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">Analytics</h2>
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-white">Analytics</h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              <div className="glass-card p-4 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="glass-card p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="text-neon-cyan" size={20} />
-                  <span className="text-xs sm:text-sm text-gray-400">Completion Rate</span>
+                  <CheckCircle className="text-neon-cyan" size={24} />
+                  <span className="text-gray-400">Completion Rate</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{completionRate}%</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">{completedTasks} of {totalTasks} tasks</p>
+                <p className="text-3xl font-bold text-white">{completionRate}%</p>
+                <p className="text-sm text-gray-500 mt-1">{completedTasks} of {totalTasks} tasks</p>
               </div>
 
-              <div className="glass-card p-4 sm:p-6">
+              <div className="glass-card p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Clock className="text-neon-purple" size={20} />
-                  <span className="text-xs sm:text-sm text-gray-400">Total Tasks</span>
+                  <Clock className="text-neon-purple" size={24} />
+                  <span className="text-gray-400">Total Tasks</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{totalTasks}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">All time</p>
+                <p className="text-3xl font-bold text-white">{totalTasks}</p>
+                <p className="text-sm text-gray-500 mt-1">All time</p>
               </div>
 
-              <div className="glass-card p-4 sm:p-6">
+              <div className="glass-card p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <TrendingUp className="text-neon-cyan" size={20} />
-                  <span className="text-xs sm:text-sm text-gray-400">High Priority</span>
+                  <TrendingUp className="text-neon-cyan" size={24} />
+                  <span className="text-gray-400">High Priority</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{highPriorityTasks}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">Pending tasks</p>
+                <p className="text-3xl font-bold text-white">{highPriorityTasks}</p>
+                <p className="text-sm text-gray-500 mt-1">Pending tasks</p>
               </div>
 
-              <div className="glass-card p-4 sm:p-6">
+              <div className="glass-card p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Flame className="text-neon-red" size={20} />
-                  <span className="text-xs sm:text-sm text-gray-400">Avg Stress</span>
+                  <Flame className="text-neon-red" size={24} />
+                  <span className="text-gray-400">Avg Stress</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{avgStress}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">Based on {emotions.length} logs</p>
+                <p className="text-3xl font-bold text-white">{avgStress}</p>
+                <p className="text-sm text-gray-500 mt-1">Based on {emotions.length} logs</p>
               </div>
             </div>
 
             {behaviorPatterns && (
-              <div className="glass-card p-4 sm:p-6">
-                <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                  <Brain className="text-neon-purple" size={20} />
-                  <h3 className="text-base sm:text-lg font-semibold text-white">Auto Insights</h3>
+              <div className="glass-card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <Brain className="text-neon-purple" size={24} />
+                  <h3 className="text-lg font-semibold text-white">Auto Insights</h3>
                 </div>
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
-                    <p className="text-xs sm:text-sm text-gray-400 mb-1">🔥 Peak Productivity Time</p>
-                    <p className="text-base sm:text-lg font-semibold capitalize text-white">{behaviorPatterns.peakProductivityTime}</p>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <p className="text-sm text-gray-400 mb-1">🔥 Peak Productivity Time</p>
+                    <p className="text-lg font-semibold capitalize text-white">{behaviorPatterns.peakProductivityTime}</p>
                   </div>
-                  <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
-                    <p className="text-xs sm:text-sm text-gray-400 mb-1">⚠️ High Stress Time</p>
-                    <p className="text-base sm:text-lg font-semibold capitalize text-white">{behaviorPatterns.highStressTime}</p>
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <p className="text-sm text-gray-400 mb-1">⚠️ High Stress Time</p>
+                    <p className="text-lg font-semibold capitalize text-white">{behaviorPatterns.highStressTime}</p>
                   </div>
-                  <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
-                    <p className="text-xs sm:text-sm text-gray-400 mb-1">🧠 Work Style</p>
-                    <p className="text-base sm:text-lg font-semibold text-white">{behaviorPatterns.workStyle}</p>
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <p className="text-sm text-gray-400 mb-1">🧠 Work Style</p>
+                    <p className="text-lg font-semibold text-white">{behaviorPatterns.workStyle}</p>
                   </div>
                   {behaviorPatterns.weakAreas && behaviorPatterns.weakAreas.length > 0 && (
-                    <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
-                      <p className="text-xs sm:text-sm text-gray-400 mb-2">📉 Areas to Improve</p>
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                      <p className="text-sm text-gray-400 mb-2">📉 Areas to Improve</p>
                       <div className="flex flex-wrap gap-2">
                         {behaviorPatterns.weakAreas.map((area, index) => (
-                          <span key={index} className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-xs sm:text-sm">
+                          <span key={index} className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm">
                             {area}
                           </span>
                         ))}
@@ -209,10 +208,10 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {behaviorPatterns && (
-                <div className="glass-card p-4 sm:p-6">
-                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Productivity by Emotion</h3>
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Productivity by Emotion</h3>
                   <div className="space-y-4">
                     {Object.entries(behaviorPatterns.productivityByEmotion || {}).map(([emotion, count]) => {
                       const total = Object.values(behaviorPatterns.productivityByEmotion).reduce((a, b) => a + b, 0);
@@ -241,9 +240,9 @@ export default function AnalyticsPage() {
                 </div>
               )}
 
-              <div className="glass-card p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Mood Distribution</h3>
-                <div className="space-y-2 sm:space-y-3">
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Mood Distribution</h3>
+                <div className="space-y-3">
                   {Object.entries(moodCounts).map(([mood, count]) => {
                     const percentage = emotions.length > 0 ? Math.round((count / emotions.length) * 100) : 0;
                     const colors = {
@@ -253,13 +252,13 @@ export default function AnalyticsPage() {
                     };
                     return (
                       <div key={mood}>
-                        <div className="flex justify-between text-xs sm:text-sm mb-1">
+                        <div className="flex justify-between text-sm mb-1">
                           <span className="text-gray-300 capitalize">{mood}</span>
                           <span className="text-gray-400">{count} ({percentage}%)</span>
                         </div>
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${colors[mood] || 'bg-purple-500'}`}
+                          <div 
+                            className={`h-full ${colors[mood] || 'bg-purple-500'}`} 
                             style={{ width: `${percentage}%` }}
                           ></div>
                         </div>
@@ -269,8 +268,8 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              <div className="glass-card p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Stress Timeline (Last 7 Days)</h3>
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Stress Timeline (Last 7 Days)</h3>
                 <div className="space-y-2">
                   {recentEmotions.length > 0 ? (
                     recentEmotions.map((emotion, index) => {
@@ -299,28 +298,28 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="glass-card p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Emotion Timeline</h3>
-              <div className="space-y-3 sm:space-y-4">
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Emotion Timeline</h3>
+              <div className="space-y-4">
                 {recentEmotions.length > 0 ? (
                   recentEmotions.map((emotion) => {
                     const confidence = emotion.confidence ? Math.round(emotion.confidence * 100) : null;
                     const source = emotion.source === 'detection' ? '📷' : '👤';
                     const stressScore = emotion.stress_score || emotion.stress_level;
                     return (
-                      <div key={emotion.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <span className="text-xl sm:text-2xl">{source}</span>
+                      <div key={emotion.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="flex items-center gap-4">
+                          <span className="text-2xl">{source}</span>
                           <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm sm:text-base text-white font-medium capitalize">{emotion.mood}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-medium capitalize">{emotion.mood}</span>
                               {confidence && (
                                 <span className="text-xs px-2 py-1 rounded-full bg-neon-cyan/20 text-neon-cyan">
                                   {confidence}% confidence
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                            <p className="text-sm text-gray-400 mt-1">
                               {new Date(emotion.created_at).toLocaleString()}
                             </p>
                           </div>
@@ -343,7 +342,7 @@ export default function AnalyticsPage() {
 
             <div className="glass-card p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Insights</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 rounded-lg border border-white/10">
                   <p className="text-sm text-gray-400 mb-2">Productivity Insight</p>
                   <p className="text-white">
@@ -402,7 +401,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg font-semibold text-white">Behavior Insights</h3>
                 </div>
                 
-                {behaviorPatterns.insights?.length > 0 ? (
+                {behaviorPatterns.insights.length > 0 ? (
                   <div className="space-y-3">
                     {behaviorPatterns.insights.map((insight, index) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
