@@ -53,7 +53,15 @@ export default function EmotionPage() {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Request camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        }, 
+        audio: false 
+      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -62,7 +70,15 @@ export default function EmotionPage() {
         setError(null);
       }
     } catch (err) {
-      setError('Camera access denied. Please enable camera permissions.');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Camera permission denied. Please allow camera access in your browser settings.');
+      } else if (err.name === 'NotFoundError') {
+        setError('No camera found. Please connect a camera and try again.');
+      } else if (err.name === 'NotReadableError') {
+        setError('Camera is already in use by another application.');
+      } else {
+        setError('Failed to access camera. Please check your permissions and try again.');
+      }
       console.error('Camera error:', err);
     }
   };
