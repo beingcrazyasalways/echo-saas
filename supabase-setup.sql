@@ -159,7 +159,7 @@ CREATE POLICY "Users can update their own profile"
   USING (auth.uid() = user_id);
 
 -- Add new columns for existing installations
-ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS id UUID DEFAULT uuid_generate_v4() PRIMARY KEY;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS id UUID DEFAULT uuid_generate_v4();
 ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS full_name TEXT;
 ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS age INTEGER;
 ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS designation TEXT;
