@@ -37,6 +37,7 @@ Always:
 - avoid long paragraphs
 - personalize based on user's current state and patterns
 - consider user's behavior patterns when making suggestions
+- adapt your tone based on user's profile (if provided)
 
 You can add or delete tasks for the user. When the user asks to add a task, you MUST include the action in your JSON response with the action field. The action format is: { "type": "add_task", "title": "task title", "priority": "low|medium|high" }. When the user asks to delete a task, use: { "type": "delete_task", "title": "task title" }.
 
@@ -51,7 +52,7 @@ Respond in JSON format with this structure:
 
 export async function POST(request) {
   try {
-    const { message, tasks, emotion, behaviorPatterns } = await request.json();
+    const { message, tasks, emotion, behaviorPatterns, userProfile } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -77,8 +78,24 @@ export async function POST(request) {
     }));
 
     const behaviorContext = behaviorPatterns ? getBehaviorContext(behaviorPatterns) : '';
+    
+    // Add user profile context if available
+    let profileContext = '';
+    if (userProfile) {
+      const { name, ai_context, ai_memory_summary, productivity_score, peak_productivity_time, work_style } = userProfile;
+      profileContext = `
+User profile:
+- Name: ${name || 'User'}
+- Productivity score: ${productivity_score || 50}/100
+- Peak productivity time: ${peak_productivity_time || 'not set'}
+- Work style: ${work_style || 'not set'}
+- AI memory: ${ai_memory_summary || 'No memory available'}
+- AI context: ${ai_context ? JSON.stringify(ai_context) : '{}'}
+`;
+    }
 
     const context = `
+${profileContext}
 Current emotion: ${emotion || 'not set'}
 Recent tasks: ${JSON.stringify(last5Tasks, null, 2)}
 User message: ${message}

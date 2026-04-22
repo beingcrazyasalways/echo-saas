@@ -9,6 +9,7 @@ import { generateSuggestion, getEmotionGlow } from '@/lib/aiSuggestions';
 import { logActivity, fetchRecentActivities, getTodayActivities, getLastVisit } from '@/lib/activities';
 import { prioritizeTasks, analyzeUserState, generateDailyBriefing, generateMicroNudge, shouldTriggerFocusMode } from '@/lib/proactiveAI';
 import { analyzeBehaviorPatterns, getUserProfile, updateDailySummary, calculateProductivityScore, logTaskBehavior, logEmotionBehavior, logSessionBehavior, getTodayMetrics, calculateStreak, calculateXP } from '@/lib/behaviorIntelligence';
+import { getUserProfile as fetchUserProfile, getPersonalizedGreeting } from '@/lib/userProfile';
 import logger from '@/lib/logger';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -27,6 +28,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { dayOfWeek, formattedTime, sessionDuration, timeOfDay } = useTimeContext();
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [currentEmotion, setCurrentEmotion] = useState('');
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -201,6 +203,11 @@ export default function DashboardPage() {
       return;
     }
     setUser(currentUser);
+    
+    // Load user profile for personalization
+    const profile = await fetchUserProfile(currentUser.id);
+    setUserProfile(profile);
+    
     setLoading(false);
   };
 
@@ -555,6 +562,7 @@ export default function DashboardPage() {
           currentEmotion={currentEmotion} 
           onLogout={handleLogout}
           onMenuToggle={() => setSidebarOpen(true)}
+          userProfile={userProfile}
         />  
         <div className="px-4 sm:px-8 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -725,9 +733,9 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
-                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Add New Task</h3>
-                  <form onSubmit={handleAddTask} className="flex flex-col gap-2 sm:gap-3">
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl aspect-square flex flex-col">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3">Add New Task</h3>
+                  <form onSubmit={handleAddTask} className="flex flex-col gap-2 sm:gap-3 flex-1">
                     <input
                       type="text"
                       value={newTaskTitle}
@@ -759,7 +767,7 @@ export default function DashboardPage() {
                   </form>
                 </div>
 
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl aspect-square flex flex-col">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-base sm:text-lg font-semibold text-white">Your Tasks</h3>
                     {prioritizedTasks.length > 0 && (
@@ -773,7 +781,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <TaskList
-                    tasks={tasks}
+                    tasks={tasks.slice(0, 3)}
                     onToggle={handleToggleTask}
                     onDelete={handleDeleteTask}
                     onUpdatePriority={handleUpdatePriority}
@@ -782,10 +790,10 @@ export default function DashboardPage() {
                 </div>
 
                 {emotionHistory.length > 0 && (
-                  <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl">
-                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Emotion History</h3>
-                    <div className="space-y-2 sm:space-y-3">
-                      {emotionHistory.slice(0, 5).map((emotion) => (
+                  <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-2xl aspect-square flex flex-col">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3">Emotion History</h3>
+                    <div className="space-y-2 sm:space-y-3 flex-1">
+                      {emotionHistory.slice(0, 3).map((emotion) => (
                         <div key={emotion.id} className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-all">
                           <div className="flex items-center gap-2 sm:gap-3">
                             {emotion.source === 'detection' ? (
@@ -878,6 +886,7 @@ export default function DashboardPage() {
               tasks={tasks}
               currentEmotion={currentEmotion}
               behaviorPatterns={behaviorPatterns}
+              userProfile={userProfile}
               onSuggestionUpdate={(suggestion) => {
                 setSuggestion(suggestion);
                 setShowSuggestionModal(true);

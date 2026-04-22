@@ -2,8 +2,9 @@
 
 import { User, Bell, Menu } from 'lucide-react';
 import { useTimeContext } from '../hooks/useTimeContext';
+import { getPersonalizedGreeting } from '@/lib/userProfile';
 
-export default function Header({ user, currentEmotion, onMenuToggle }) {
+export default function Header({ user, currentEmotion, onMenuToggle, userProfile }) {
   const { greeting, sessionDuration, formattedTime } = useTimeContext();
 
   const getEmotionBadge = () => {
@@ -19,6 +20,8 @@ export default function Header({ user, currentEmotion, onMenuToggle }) {
     }
   };
 
+  const personalizedGreeting = getPersonalizedGreeting(userProfile);
+
   return (
     <header className="h-20 backdrop-blur-xl bg-slate-900/30 border-b border-white/10 flex items-center justify-between px-4 sm:px-8">
       <div className="flex items-center gap-4">
@@ -30,7 +33,7 @@ export default function Header({ user, currentEmotion, onMenuToggle }) {
         </button>
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-white">
-            {greeting}
+            {personalizedGreeting}
           </h2>
           <div className="flex items-center gap-4 mt-1">
             <p className="text-sm text-gray-400 hidden sm:block">

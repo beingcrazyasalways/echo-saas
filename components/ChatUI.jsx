@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Send, Sparkles, X, AlertCircle } from 'lucide-react';
+import { useState, memo } from 'react';
+import { Send, Sparkles, X } from 'lucide-react';
 
-export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSuggestionUpdate, onClose, onAddTask, onDeleteTask, userEmail, userId }) {
+function ChatUI({ tasks, currentEmotion, behaviorPatterns, userProfile, onSuggestionUpdate, onClose, onAddTask, onDeleteTask }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Clear error when opening new chat
-  useEffect(() => {
-    setError(null);
-  }, [tasks, currentEmotion]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -31,11 +25,10 @@ export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSugg
         },
         body: JSON.stringify({
           message: userMessage,
-          tasks,
-          emotion: currentEmotion,
-          behaviorPatterns,
-          userEmail,
-          userId,
+          tasks: tasks || [],
+          emotion: currentEmotion || '',
+          behaviorPatterns: behaviorPatterns || null,
+          userProfile: userProfile || null,
         }),
       });
 
@@ -65,7 +58,6 @@ export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSugg
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setError('Sorry, I encountered an error. Please try again.');
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
     } finally {
       setLoading(false);
@@ -73,36 +65,30 @@ export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSugg
   };
 
   return (
-    <div className="glass-card p-4 sm:p-6 flex flex-col h-full max-h-[calc(100vh-2rem)] sm:max-h-full">
+    <div className="glass-card p-6 flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Sparkles size={24} className="text-neon-cyan" />
+          <div className="p-2 rounded-lg bg-neon-cyan/20">
+            <Sparkles size={20} className="text-neon-cyan" />
+          </div>
           <h3 className="text-lg font-semibold text-white">E.C.H.O AI</h3>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors active:scale-95"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
           >
             <X size={20} className="text-gray-400" />
           </button>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-[calc(100vh-12rem)] sm:max-h-80 pb-safe">
-        {error && (
-          <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 mx-auto max-w-fit">
-            <div className="flex items-center gap-2">
-              <AlertCircle size={16} className="text-red-400" />
-              <p className="text-sm text-red-300">{error}</p>
-            </div>
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-80">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-400 py-8 px-4">
+          <div className="text-center text-gray-400 py-8">
             <Sparkles size={32} className="text-neon-cyan mx-auto mb-2 opacity-50" />
-            <p className="text-sm sm:text-base">Ask E.C.H.O for help with your tasks</p>
-            <p className="text-xs sm:text-sm mt-1">I understand your emotions and provide personalized suggestions</p>
+            <p>Ask E.C.H.O for help with your tasks</p>
+            <p className="text-sm mt-1">I understand your emotions and provide personalized suggestions</p>
           </div>
         ) : (
           messages.map((msg, index) => (
@@ -110,41 +96,41 @@ export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSugg
               key={index}
               className={`p-3 rounded-lg ${
                 msg.role === 'user'
-                  ? 'bg-neon-cyan/20 border border-neon-cyan/30 ml-4 sm:ml-8'
+                  ? 'bg-neon-cyan/20 border border-neon-cyan/30 ml-8'
                   : msg.role === 'system'
                   ? 'bg-emerald-500/20 border border-emerald-500/30 mx-auto max-w-fit'
-                  : 'bg-neon-purple/20 border border-neon-purple/30 mr-4 sm:mr-8'
+                  : 'bg-neon-purple/20 border border-neon-purple/30 mr-8'
               }`}
             >
-              <p className="text-sm text-gray-200 break-words">{msg.content}</p>
+              <p className="text-sm text-gray-200">{msg.content}</p>
             </div>
           ))
         )}
         {loading && (
-          <div className="p-3 rounded-lg bg-neon-purple/20 border border-neon-purple/30 mr-4 sm:mr-8">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-neon-purple rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-neon-purple rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-neon-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <p className="text-sm text-gray-400 ml-2">E.C.H.O is thinking...</p>
+          <div className="p-3 rounded-lg bg-neon-purple/20 border border-neon-purple/30 mr-8 flex items-center gap-2">
+            <div className="flex gap-1">
+              <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
             </div>
+            <p className="text-sm text-gray-400">Thinking...</p>
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSend} className="flex gap-2 pb-safe">
+      <form onSubmit={handleSend} className="flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask for help with tasks..."
-          className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan/50 transition-colors text-sm sm:text-base"
+          className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan/50 transition-colors"
           disabled={loading}
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="px-4 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 min-h-[48px]"
+          className="px-4 py-2 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send size={20} />
         </button>
@@ -152,3 +138,5 @@ export default function ChatUI({ tasks, currentEmotion, behaviorPatterns, onSugg
     </div>
   );
 }
+
+export default memo(ChatUI);
