@@ -118,13 +118,14 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900">
-      <Sidebar 
-        currentEmotion={currentEmotion} 
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-      
-      <div className="w-full lg:ml-72">
+      <div className="flex flex-col lg:flex-row">
+        <Sidebar
+          currentEmotion={currentEmotion}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        <div className="flex-1 w-full min-w-0">
         <Header 
           user={user} 
           currentEmotion={currentEmotion} 
@@ -454,6 +455,7 @@ export default function AnalyticsPage() {
             )}
           </div>
         </main>
+      </div>
       </div>
     </div>
   );

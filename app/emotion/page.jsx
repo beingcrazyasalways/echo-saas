@@ -229,13 +229,14 @@ export default function EmotionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      <Sidebar 
-        currentEmotion={currentEmotion} 
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-      
-      <div className="w-full lg:ml-72">
+      <div className="flex flex-col lg:flex-row">
+        <Sidebar
+          currentEmotion={currentEmotion}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        <div className="flex-1 w-full min-w-0">
         <Header 
           user={user} 
           currentEmotion={currentEmotion} 
@@ -492,6 +493,7 @@ export default function EmotionPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
