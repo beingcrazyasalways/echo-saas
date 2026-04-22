@@ -53,7 +53,6 @@ export default function DashboardPage() {
   const [emotionHistory, setEmotionHistory] = useState([]);
   const [showProfilePanel, setShowProfilePanel] = useState(false);
   const [behaviorPatterns, setBehaviorPatterns] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const [productivityScore, setProductivityScore] = useState(50);
   const [todayMetrics, setTodayMetrics] = useState(null);
   const [automationAlert, setAutomationAlert] = useState(null);
