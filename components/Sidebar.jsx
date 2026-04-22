@@ -25,7 +25,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
   ];
 
   const handleLogout = async () => {
-    const { signOut } = await import('../lib/supabaseClient');
+    const { signOut } = await import('@/lib/supabaseClient');
     await signOut();
     router.push('/login');
   };
