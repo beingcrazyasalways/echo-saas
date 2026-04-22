@@ -522,13 +522,14 @@ export default function DashboardPage() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${gradientClass} ${glowClass} transition-all duration-500`}>
-      <Sidebar
-        currentEmotion={currentEmotion}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <div className="flex flex-col lg:flex-row">
+        <Sidebar
+          currentEmotion={currentEmotion}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
-      <div className="lg:ml-72">
+        <div className="flex-1 w-full min-w-0">
         {taskFeedback && (
           <div className={`fixed top-24 right-8 px-4 py-3 rounded-lg shadow-lg z-50 ${
             taskFeedback.type === 'success' 
@@ -948,6 +949,7 @@ export default function DashboardPage() {
         />
       )}
       </div>
+    </div>
     </div>
   );
 }
