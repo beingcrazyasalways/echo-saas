@@ -206,34 +206,49 @@ export default function EmotionPage() {
   };
 
   const analyzeVideoBlob = async (blob) => {
-    const formData = new FormData();
-    formData.append('video', blob, 'emotion-analysis.webm');
+    try {
+      const formData = new FormData();
+      formData.append('video', blob, 'emotion-analysis.webm');
 
-    const response = await fetch('/api/emotion/analyze', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Video analysis failed');
-    }
-
-    const result = await response.json();
-    setEmotionResult(result);
-    
-    if (user && result) {
-      await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
-      
-      localStorage.setItem('currentEmotion', result.emotion);
-      
-      await fetch('/api/ai', {
+      const response = await fetch('/api/emotion/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `I'm feeling ${result.emotion}`,
-          tasks: [],
-          emotion: result.emotion,
-        }),
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Video analysis failed');
+      }
+
+      const result = await response.json();
+      setEmotionResult(result);
+      
+      if (user && result) {
+        try {
+          await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
+          
+          localStorage.setItem('currentEmotion', result.emotion);
+          
+          await fetch('/api/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `I'm feeling ${result.emotion}`,
+              tasks: [],
+              emotion: result.emotion,
+            }),
+          });
+        } catch (logError) {
+          console.error('Error logging emotion:', logError);
+        }
+      }
+    } catch (error) {
+      console.error('Error analyzing video blob:', error);
+      setError('Analysis failed. Please try again.');
+      setEmotionResult({
+        emotion: 'calm',
+        confidence: 0.5,
+        stress_score: 30,
+        fallback: true,
       });
     }
   };
@@ -265,37 +280,52 @@ export default function EmotionPage() {
   };
 
   const analyzeEmotion = async (imageData, updateState = true) => {
-    const response = await fetch('/api/emotion/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageData }),
-    });
+    try {
+      const response = await fetch('/api/emotion/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData }),
+      });
 
-    if (!response.ok) {
-      throw new Error('Analysis failed');
-    }
-
-    const result = await response.json();
-    if (updateState) {
-      setEmotionResult(result);
-      
-      if (user && result) {
-        await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
-        
-        localStorage.setItem('currentEmotion', result.emotion);
-        
-        await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: `I'm feeling ${result.emotion}`,
-            tasks: [],
-            emotion: result.emotion,
-          }),
-        });
+      if (!response.ok) {
+        throw new Error('Analysis failed');
       }
+
+      const result = await response.json();
+      if (updateState) {
+        setEmotionResult(result);
+        
+        if (user && result) {
+          try {
+            await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
+            
+            localStorage.setItem('currentEmotion', result.emotion);
+            
+            await fetch('/api/ai', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                message: `I'm feeling ${result.emotion}`,
+                tasks: [],
+                emotion: result.emotion,
+              }),
+            });
+          } catch (logError) {
+            console.error('Error logging emotion:', logError);
+          }
+        }
+      }
+      return result;
+    } catch (error) {
+      console.error('Error analyzing emotion:', error);
+      setError('Analysis failed. Please try again.');
+      return {
+        emotion: 'calm',
+        confidence: 0.5,
+        stress_score: 30,
+        fallback: true,
+      };
     }
-    return result;
   };
 
   const averageEmotionResults = (results) => {

@@ -50,16 +50,26 @@ export default function AnalyticsPage() {
 
   const loadData = async () => {
     if (!user) return;
-    const { data: tasksData } = await fetchTasks(user.id);
-    const { data: emotionsData } = await fetchEmotions(user.id);
-    setTasks(tasksData || []);
-    setEmotions(emotionsData || []);
+    try {
+      const { data: tasksData } = await fetchTasks(user.id);
+      const { data: emotionsData } = await fetchEmotions(user.id);
+      setTasks(tasksData || []);
+      setEmotions(emotionsData || []);
 
-    // Load behavior patterns using new function
-    const patterns = await analyzeBehaviorPatterns(user.id);
-    setBehaviorPatterns(patterns);
+      // Load behavior patterns using new function
+      try {
+        const patterns = await analyzeBehaviorPatterns(user.id);
+        setBehaviorPatterns(patterns);
+      } catch (error) {
+        console.error('Error loading behavior patterns:', error);
+        setBehaviorPatterns(null);
+      }
 
-    setLoading(false);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+      setLoading(false);
+    }
   };
 
   if (loading) {
