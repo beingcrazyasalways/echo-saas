@@ -57,8 +57,8 @@ CREATE TABLE IF NOT EXISTS user_behavior (
 
 -- Create user_profile table for storing user traits and memory
 CREATE TABLE IF NOT EXISTS user_profile (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID DEFAULT uuid_generate_v4(),
   name TEXT,
   full_name TEXT,
   age INTEGER,
@@ -82,11 +82,13 @@ CREATE TABLE IF NOT EXISTS user_profile (
 );
 
 -- Enable Row Level Security
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE emotions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_behavior ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_profile ENABLE ROW LEVEL SECURITY;
+-- NOTE: Comment out RLS enable/disable for initial setup
+-- Uncomment after auth users are created and data is seeded
+-- ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE emotions ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE user_behavior ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE user_profile ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for tasks
 DROP POLICY IF EXISTS "Users can view their own tasks" ON tasks;
