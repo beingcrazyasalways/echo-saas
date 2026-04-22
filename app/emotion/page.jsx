@@ -15,6 +15,7 @@ export default function EmotionPage() {
   const { formattedTime, timeOfDay } = useTimeContext();
   const [mode, setMode] = useState('camera');
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [emotionResult, setEmotionResult] = useState(null);
   const [error, setError] = useState(null);
@@ -22,11 +23,15 @@ export default function EmotionPage() {
   const [user, setUser] = useState(null);
   const [currentEmotion, setCurrentEmotion] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(5);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const streamRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
 
   useEffect(() => {
     const savedEmotion = localStorage.getItem('currentEmotion');
@@ -41,9 +46,8 @@ export default function EmotionPage() {
 
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
+      stopRecording();
     };
   }, []);
 
@@ -68,6 +72,59 @@ export default function EmotionPage() {
       streamRef.current = null;
     }
     setIsCameraActive(false);
+    stopRecording();
+  };
+
+  const startRecording = () => {
+    if (!streamRef.current) return;
+
+    try {
+      recordedChunksRef.current = [];
+      const stream = streamRef.current;
+      
+      const options = { mimeType: 'video/webm;codecs=vp9' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm';
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        setIsRecording(false);
+        if (recordingTimerRef.current) {
+          clearTimeout(recordingTimerRef.current);
+        }
+      };
+
+      mediaRecorder.start(100); // Collect chunks every 100ms
+      setIsRecording(true);
+
+      // Auto-stop after configured duration
+      recordingTimerRef.current = setTimeout(() => {
+        stopRecording();
+      }, recordingDuration * 1000);
+
+    } catch (err) {
+      setError('Failed to start recording. Please try again.');
+      console.error('Recording error:', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    if (recordingTimerRef.current) {
+      clearTimeout(recordingTimerRef.current);
+    }
   };
 
   const captureAndAnalyze = async () => {
@@ -81,13 +138,26 @@ export default function EmotionPage() {
 
     try {
       if (mode === 'camera' && videoRef.current) {
-        const canvas = canvasRef.current;
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoRef.current, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg');
-        await analyzeEmotion(imageData);
+        // Start recording
+        startRecording();
+        
+        // Wait for recording to complete
+        await new Promise(resolve => {
+          const checkRecording = setInterval(() => {
+            if (!isRecording) {
+              clearInterval(checkRecording);
+              resolve();
+            }
+          }, 100);
+        });
+
+        // Get recorded video blob
+        if (recordedChunksRef.current.length > 0) {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          await analyzeVideoBlob(blob);
+        } else {
+          throw new Error('No video data recorded');
+        }
       } else if (mode === 'image' && fileInputRef.current?.files[0]) {
         const file = fileInputRef.current.files[0];
         const imageData = await fileToDataURL(file);
@@ -110,6 +180,39 @@ export default function EmotionPage() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  };
+
+  const analyzeVideoBlob = async (blob) => {
+    const formData = new FormData();
+    formData.append('video', blob, 'emotion-analysis.webm');
+
+    const response = await fetch('/api/emotion/analyze', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Video analysis failed');
+    }
+
+    const result = await response.json();
+    setEmotionResult(result);
+    
+    if (user && result) {
+      await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
+      
+      localStorage.setItem('currentEmotion', result.emotion);
+      
+      await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `I'm feeling ${result.emotion}`,
+          tasks: [],
+          emotion: result.emotion,
+        }),
+      });
+    }
   };
 
   const analyzeVideo = async (videoFile) => {
@@ -308,14 +411,37 @@ export default function EmotionPage() {
                   <div className="space-y-4">
                     <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
                       {isCameraActive ? (
-                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-500">
                           <Camera className="w-16 h-16" />
                         </div>
                       )}
+                      {isRecording && (
+                        <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-red-500 rounded-full">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                          <span className="text-xs text-white font-medium">Recording...</span>
+                        </div>
+                      )}
                       <canvas ref={canvasRef} className="hidden" />
                     </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-400">Recording Duration:</label>
+                      <select
+                        value={recordingDuration}
+                        onChange={(e) => setRecordingDuration(parseInt(e.target.value))}
+                        disabled={isRecording || isAnalyzing}
+                        className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-neon-cyan/50 disabled:opacity-50"
+                      >
+                        <option value="2">2 seconds</option>
+                        <option value="5">5 seconds</option>
+                        <option value="10">10 seconds</option>
+                        <option value="15">15 seconds</option>
+                        <option value="20">20 seconds</option>
+                      </select>
+                    </div>
+                    
                     <div className="flex gap-3">
                       {!isCameraActive ? (
                         <button
@@ -329,11 +455,25 @@ export default function EmotionPage() {
                         <>
                           <button
                             onClick={captureAndAnalyze}
-                            disabled={isAnalyzing || !enableTracking}
+                            disabled={isAnalyzing || !enableTracking || isRecording}
                             className="flex-1 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isAnalyzing ? <RefreshCw className="animate-spin" size={20} /> : <Camera size={20} />}
-                            {isAnalyzing ? 'Analyzing...' : 'Capture & Analyze'}
+                            {isRecording ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Recording...
+                              </>
+                            ) : isAnalyzing ? (
+                              <>
+                                <RefreshCw className="animate-spin" size={20} />
+                                Analyzing...
+                              </>
+                            ) : (
+                              <>
+                                <Camera size={20} />
+                                Record & Analyze
+                              </>
+                            )}
                           </button>
                           <button
                             onClick={stopCamera}
