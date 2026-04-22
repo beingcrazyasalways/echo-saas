@@ -57,6 +57,7 @@ export default function EmotionPage() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        await videoRef.current.play();
         setIsCameraActive(true);
         setError(null);
       }
