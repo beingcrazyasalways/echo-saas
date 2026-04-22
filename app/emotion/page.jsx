@@ -117,13 +117,19 @@ export default function EmotionPage() {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
     if (recordingTimerRef.current) {
       clearTimeout(recordingTimerRef.current);
+    }
+    
+    // Analyze the recorded video immediately
+    if (recordedChunksRef.current.length > 0 && isAnalyzing) {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+      await analyzeVideoBlob(blob);
     }
   };
 
@@ -453,34 +459,49 @@ export default function EmotionPage() {
                         </button>
                       ) : (
                         <>
-                          <button
-                            onClick={captureAndAnalyze}
-                            disabled={isAnalyzing || !enableTracking || isRecording}
-                            className="flex-1 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isRecording ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Recording...
-                              </>
-                            ) : isAnalyzing ? (
-                              <>
-                                <RefreshCw className="animate-spin" size={20} />
-                                Analyzing...
-                              </>
-                            ) : (
-                              <>
-                                <Camera size={20} />
-                                Record & Analyze
-                              </>
-                            )}
-                          </button>
-                          <button
-                            onClick={stopCamera}
-                            className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
-                          >
-                            <MicOff size={20} />
-                          </button>
+                          {isRecording ? (
+                            <>
+                              <button
+                                onClick={stopRecording}
+                                className="flex-1 py-3 bg-red-500 rounded-lg text-white font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <X size={20} />
+                                Stop Recording
+                              </button>
+                              <button
+                                onClick={stopCamera}
+                                className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
+                              >
+                                <MicOff size={20} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={captureAndAnalyze}
+                                disabled={isAnalyzing || !enableTracking}
+                                className="flex-1 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isAnalyzing ? (
+                                  <>
+                                    <RefreshCw className="animate-spin" size={20} />
+                                    Analyzing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Camera size={20} />
+                                    Record & Analyze
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                onClick={stopCamera}
+                                className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
+                              >
+                                <MicOff size={20} />
+                              </button>
+                            </>
+                          )}
                         </>
                       )}
                     </div>
