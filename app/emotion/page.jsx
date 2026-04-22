@@ -641,14 +641,14 @@ export default function EmotionPage() {
                 ) : (
                   <div className="text-center py-12 text-gray-400">
                     <Camera className="w-16 h-16 mx-auto mb-4 opacity-50 animate-pulse" />
-                    <p className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Waiting for detection</span>
                       <div className="flex gap-1">
                         <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                         <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                         <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                       </div>
-                    </p>
+                    </div>
                   </div>
                 )}
               </div>
