@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, signOut, getCurrentUser } from '../../lib/supabaseClient';
-import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '../../lib/tasks';
-import { logEmotion, getLatestEmotion } from '../../lib/emotions';
-import { generateSuggestion, getEmotionGlow } from '../../lib/aiSuggestions';
-import { logActivity, fetchRecentActivities, getTodayActivities, getLastVisit } from '../../lib/activities';
-import { prioritizeTasks, analyzeUserState, generateDailyBriefing, generateMicroNudge, shouldTriggerFocusMode } from '../../lib/proactiveAI';
-import { analyzeBehaviorPatterns, getUserProfile, updateDailySummary, calculateProductivityScore, logTaskBehavior, logEmotionBehavior, logSessionBehavior, getTodayMetrics, calculateStreak, calculateXP } from '../../lib/behaviorIntelligence';
-import logger from '../../lib/logger';
+import { supabase, signOut, getCurrentUser } from '@/lib/supabaseClient';
+import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '@/lib/tasks';
+import { logEmotion, getLatestEmotion } from '@/lib/emotions';
+import { generateSuggestion, getEmotionGlow } from '@/lib/aiSuggestions';
+import { logActivity, fetchRecentActivities, getTodayActivities, getLastVisit } from '@/lib/activities';
+import { prioritizeTasks, analyzeUserState, generateDailyBriefing, generateMicroNudge, shouldTriggerFocusMode } from '@/lib/proactiveAI';
+import { analyzeBehaviorPatterns, getUserProfile, updateDailySummary, calculateProductivityScore, logTaskBehavior, logEmotionBehavior, logSessionBehavior, getTodayMetrics, calculateStreak, calculateXP } from '@/lib/behaviorIntelligence';
+import logger from '@/lib/logger';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import TaskList from '../../components/TaskList';
@@ -238,7 +238,7 @@ export default function DashboardPage() {
   const loadEmotionHistory = async () => {
     if (!user) return;
     try {
-      const { fetchEmotions } = await import('../../lib/emotions');
+      const { fetchEmotions } = await import('@/lib/emotions');
       const { data } = await fetchEmotions(user.id);
       setEmotionHistory(data || []);
     } catch (error) {

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getSession } from '../../lib/supabaseClient';
-import { logEmotionFromDetection } from '../../lib/emotions';
-import { generateSuggestion } from '../../lib/aiSuggestions';
+import { getCurrentUser, getSession } from '@/lib/supabaseClient';
+import { logEmotionFromDetection } from '@/lib/emotions';
+import { generateSuggestion } from '@/lib/aiSuggestions';
 import { useTimeContext } from '../../hooks/useTimeContext';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';

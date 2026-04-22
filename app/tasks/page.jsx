@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getSession } from '../../lib/supabaseClient';
-import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '../../lib/tasks';
+import { getCurrentUser, getSession } from '@/lib/supabaseClient';
+import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '@/lib/tasks';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import TaskList from '../../components/TaskList';

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { generateSuggestion as localGenerateSuggestion } from '../../../lib/aiSuggestions';
-import { getBehaviorContext } from '../../../lib/behavior';
-import { getUserName, getSeededUserName, isSeededUser } from '../../../lib/userProfile';
+import { generateSuggestion as localGenerateSuggestion } from '@/lib/aiSuggestions';
+import { getBehaviorContext } from '@/lib/behavior';
+import logger from '@/lib/logger';
 
 const SYSTEM_PROMPT = `You are E.C.H.O, an emotionally intelligent AI assistant.
 
@@ -51,66 +51,24 @@ Respond in JSON format with this structure:
 
 export async function POST(request) {
   try {
-    const { message, tasks, emotion, behaviorPatterns, userEmail, userId } = await request.json();
+    const { message, tasks, emotion, behaviorPatterns } = await request.json();
 
     if (!message) {
-      console.error('[AI] Missing message in request');
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    console.log('[AI] Processing request:', { messageLength: message.length, hasTasks: !!tasks, emotion, userEmail });
-
-    // Detect user name for personalization
-    let userName = null;
-    if (userEmail) {
-      userName = getSeededUserName(userEmail);
-      if (!userName && userId) {
-        userName = await getUserName(userId);
-      }
-    }
-
-    console.log('[AI] User detected:', userName ? userName : 'Anonymous');
-
     const apiKey = process.env.MISTRAL_API_KEY;
 
-    // Build personalized system prompt with user name
-    let personalizedSystemPrompt = SYSTEM_PROMPT;
-    if (userName) {
-      personalizedSystemPrompt = `You are E.C.H.O, an emotionally intelligent AI assistant.
-
-The user's name is ${userName}. Address them by name in your responses to create a personalized experience.
-
-You understand the user's emotional state and provide personalized suggestions for:
-- Task management
-- Productivity advice
-- Stress management
-- General recommendations
-- Activity suggestions
-- Personal growth
-
-If the user is stressed:
-- simplify suggestions
-- reduce cognitive load
-- suggest small, easy actions
-- recommend breaks, breathing exercises, or relaxing activities
-
-If focused:
-- push high priority tasks
-- be direct and action-oriented`;
-    }
-
     if (!apiKey) {
-      console.warn('[AI] MISTRAL_API_KEY not set, falling back to local AI');
+      logger.warn('MISTRAL_API_KEY not set, falling back to local AI');
       const fallback = localGenerateSuggestion(tasks || [], emotion || '');
-      const greeting = userName ? `Hello ${userName}! ` : '';
       return NextResponse.json({
-        message: greeting + fallback.message,
+        message: fallback.message,
         suggestion: fallback.task?.title || fallback.message,
-        fallback: true,
       });
     }
 
-    console.log('[AI] Using Mistral AI for chat');
+    logger.ai('Using Mistral AI for chat');
 
     const last5Tasks = (tasks || []).slice(0, 5).map(task => ({
       title: task.title,
@@ -119,6 +77,13 @@ If focused:
     }));
 
     const behaviorContext = behaviorPatterns ? getBehaviorContext(behaviorPatterns) : '';
+
+    const context = `
+Current emotion: ${emotion || 'not set'}
+Recent tasks: ${JSON.stringify(last5Tasks, null, 2)}
+User message: ${message}
+${behaviorContext}
+`;
 
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
@@ -131,22 +96,22 @@ If focused:
         messages: [
           {
             role: 'system',
-            content: personalizedSystemPrompt
+            content: SYSTEM_PROMPT,
           },
           {
             role: 'user',
-            content: `Current emotion: ${emotion || 'neutral'}\nRecent tasks: ${JSON.stringify(last5Tasks)}\nBehavior patterns: ${JSON.stringify(behaviorPatterns || {})}\n\nUser message: ${message}`
-          }
+            content: context,
+          },
         ],
-        max_tokens: 300,
         temperature: 0.7,
+        max_tokens: 200,
+        response_format: { type: 'json_object' },
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[AI] Mistral API error:', error);
-      console.error('[AI] Status:', response.status);
+      console.error('Mistral API error:', error);
       throw new Error('Mistral API request failed');
     }
 
@@ -200,8 +165,7 @@ If focused:
     });
 
   } catch (error) {
-    console.error('[AI] API error:', error);
-    console.warn('[AI] Falling back to local AI');
+    console.error('AI API error:', error);
     
     const { message, tasks, emotion } = await request.json().catch(() => ({}));
     const fallback = localGenerateSuggestion(tasks || [], emotion || '');
@@ -209,7 +173,6 @@ If focused:
     return NextResponse.json({
       message: fallback.message,
       suggestion: fallback.task?.title || fallback.message,
-      fallback: true,
     });
   }
 }

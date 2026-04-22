@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getSession, signOut } from '../../lib/supabaseClient';
+import { getCurrentUser, getSession, signOut } from '@/lib/supabaseClient';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import { User, Mail, Shield, Trash2 } from 'lucide-react';

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getSession } from '../../lib/supabaseClient';
-import { fetchTasks } from '../../lib/tasks';
-import { fetchEmotions } from '../../lib/emotions';
-import { analyzeBehaviorPatterns, getTodayMetrics } from '../../lib/behaviorIntelligence';
+import { getCurrentUser, getSession } from '@/lib/supabaseClient';
+import { fetchTasks } from '@/lib/tasks';
+import { fetchEmotions } from '@/lib/emotions';
+import { analyzeBehaviorPatterns, getTodayMetrics } from '@/lib/behaviorIntelligence';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import { TrendingUp, CheckCircle, Clock, Flame, Brain, BarChart3 } from 'lucide-react';
