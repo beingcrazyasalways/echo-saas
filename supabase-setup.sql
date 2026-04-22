@@ -57,8 +57,15 @@ CREATE TABLE IF NOT EXISTS user_behavior (
 
 -- Create user_profile table for storing user traits and memory
 CREATE TABLE IF NOT EXISTS user_profile (
-  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   name TEXT,
+  full_name TEXT,
+  age INTEGER,
+  designation TEXT,
+  work_role TEXT,
+  bio TEXT,
+  avatar_url TEXT,
   productivity_score INTEGER DEFAULT 50 CHECK (productivity_score >= 0 AND productivity_score <= 100),
   peak_productivity_time TEXT CHECK (peak_productivity_time IN ('morning', 'afternoon', 'evening', 'night')),
   high_stress_time TEXT CHECK (high_stress_time IN ('morning', 'afternoon', 'evening', 'night')),
@@ -150,6 +157,15 @@ DROP POLICY IF EXISTS "Users can update their own profile" ON user_profile;
 CREATE POLICY "Users can update their own profile"
   ON user_profile FOR UPDATE
   USING (auth.uid() = user_id);
+
+-- Add new columns for existing installations
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS id UUID DEFAULT uuid_generate_v4() PRIMARY KEY;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS age INTEGER;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS designation TEXT;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS work_role TEXT;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- Seed user profiles for pre-registered company users
 -- Note: Auth users must be created via Supabase Dashboard or Auth API first

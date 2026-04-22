@@ -21,6 +21,7 @@ import FloatingButton from '../../components/FloatingButton';
 import ChatUI from '../../components/ChatUI';
 import FocusMode from '../../components/FocusMode';
 import MicroNudge from '../../components/MicroNudge';
+import ProfilePanel from '../../components/ProfilePanel';
 import { Plus, AlertCircle, MessageSquare, Target, Zap, Camera, Flame, Calendar, Clock } from 'lucide-react';
 import { useTimeContext } from '../../hooks/useTimeContext';
 
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [prioritizedTasks, setPrioritizedTasks] = useState([]);
   const [latestEmotionData, setLatestEmotionData] = useState(null);
   const [emotionHistory, setEmotionHistory] = useState([]);
+  const [showProfilePanel, setShowProfilePanel] = useState(false);
   const [behaviorPatterns, setBehaviorPatterns] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [productivityScore, setProductivityScore] = useState(50);
@@ -218,6 +220,10 @@ export default function DashboardPage() {
     } catch (error) {
       logger.error('[Auth] Logout error:', { error });
     }
+  };
+
+  const handleProfileUpdate = (updatedProfile) => {
+    setUserProfile(updatedProfile);
   };
 
   const loadTasks = async () => {
@@ -563,6 +569,7 @@ export default function DashboardPage() {
           onLogout={handleLogout}
           onMenuToggle={() => setSidebarOpen(true)}
           userProfile={userProfile}
+          onProfileClick={() => setShowProfilePanel(true)}
         />  
         <div className="px-4 sm:px-8 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -877,6 +884,15 @@ export default function DashboardPage() {
       <FloatingButton 
         onClick={toggleChat}
         currentEmotion={currentEmotion}
+      />
+
+      <ProfilePanel
+        isOpen={showProfilePanel}
+        onClose={() => setShowProfilePanel(false)}
+        userProfile={userProfile}
+        user={user}
+        onProfileUpdate={handleProfileUpdate}
+        onLogout={handleLogout}
       />
 
       {showChat && (

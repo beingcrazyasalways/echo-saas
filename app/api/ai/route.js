@@ -82,10 +82,15 @@ export async function POST(request) {
     // Add user profile context if available
     let profileContext = '';
     if (userProfile) {
-      const { name, ai_context, ai_memory_summary, productivity_score, peak_productivity_time, work_style } = userProfile;
+      const { name, full_name, age, designation, work_role, bio, ai_context, ai_memory_summary, productivity_score, peak_productivity_time, work_style } = userProfile;
+      const displayName = full_name || name || 'User';
       profileContext = `
 User profile:
-- Name: ${name || 'User'}
+- Name: ${displayName}
+- Age: ${age || 'not set'}
+- Designation: ${designation || 'not set'}
+- Work Role: ${work_role || 'not set'}
+- Bio: ${bio || 'not set'}
 - Productivity score: ${productivity_score || 50}/100
 - Peak productivity time: ${peak_productivity_time || 'not set'}
 - Work style: ${work_style || 'not set'}
