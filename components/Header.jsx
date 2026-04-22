@@ -48,7 +48,7 @@ export default function Header({ user, currentEmotion, onMenuToggle, userProfile
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/5 hidden sm:flex">
           <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
-          <span className="text-xs text-gray-400">{formattedTime}</span>
+          <span className="text-xs text-gray-400" suppressHydrationWarning>{formattedTime}</span>
         </div>
         {currentEmotion && (
           <div className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-full border ${getEmotionBadge()} hidden sm:block`}>
