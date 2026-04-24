@@ -77,7 +77,7 @@ export default function SuggestionCard({ suggestion, onAction }) {
           <div className="mt-6 p-5 bg-white/5 rounded-xl border border-white/5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-400">Suggested Task</span>
-              <span className={`text-xs px-3 py-2 rounded-full ${getPriorityBadge(suggestion.priority)} min-h-[32px] flex items-center justify-center`}>
+              <span className={`text-xs px-3 py-1.5 rounded-full ${getPriorityBadge(suggestion.priority)}`}>
                 {suggestion.priority}
               </span>
             </div>

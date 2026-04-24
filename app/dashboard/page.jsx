@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, signOut, getCurrentUser } from '@/lib/supabaseClient';
 import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '@/lib/tasks';
-import { logEmotion, getLatestEmotion } from '@/lib/emotions';
+import { getLatestEmotion } from '@/lib/emotions';
 import { generateSuggestion, getEmotionGlow } from '@/lib/aiSuggestions';
 import { logActivity, fetchRecentActivities, getTodayActivities, getLastVisit } from '@/lib/activities';
 import { prioritizeTasks, analyzeUserState, generateDailyBriefing, generateMicroNudge, shouldTriggerFocusMode } from '@/lib/proactiveAI';
@@ -22,7 +22,7 @@ import ChatUI from '../../components/ChatUI';
 import FocusMode from '../../components/FocusMode';
 import MicroNudge from '../../components/MicroNudge';
 import ProfilePanel from '../../components/ProfilePanel';
-import { Plus, AlertCircle, MessageSquare, Target, Zap, Camera, Flame, Calendar, Clock } from 'lucide-react';
+import { Plus, AlertCircle, Target, Zap, Camera, Flame, Calendar, Clock } from 'lucide-react';
 import { useTimeContext } from '../../hooks/useTimeContext';
 
 export default function DashboardPage() {
@@ -234,15 +234,20 @@ export default function DashboardPage() {
   const loadEmotion = async () => {
     if (!user) return;
     
-    const savedEmotion = localStorage.getItem('currentEmotion');
-    if (savedEmotion) {
-      setCurrentEmotion(savedEmotion);
-    }
+    // Get manual emotion from localStorage or current state
+    const manualEmotion = localStorage.getItem('currentEmotion') || currentEmotion || 'calm';
     
+    // Fetch latest emotion from Supabase (prioritize AI source)
     const { data } = await getLatestEmotion(user.id);
-    if (data && data.mood) {
-      setCurrentEmotion(data.mood);
-      localStorage.setItem('currentEmotion', data.mood);
+    const aiEmotion = data?.source === 'ai' ? data.mood : null;
+    
+    // Use aiEmotion ?? manualEmotion ?? "neutral" pattern
+    const newEmotion = aiEmotion ?? manualEmotion ?? 'neutral';
+    
+    setCurrentEmotion(newEmotion);
+    localStorage.setItem('currentEmotion', newEmotion);
+    
+    if (data) {
       setLatestEmotionData(data);
     }
   };
@@ -448,25 +453,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleEmotionChange = async (emotion) => {
-    setCurrentEmotion(emotion);
-    if (user) {
-      await logEmotion(user.id, emotion, 50);
-      await logActivity(user.id, 'emotion_changed', null, emotion);
-      await logEmotionBehavior(user.id, emotion, 50, 0.8);
-      setLastActivityTime(Date.now());
-      runProactiveAnalysis();
-    }
-  };
-
-  const handleSuggestionAction = (task) => {
-    logger.info('Focus on task:', { task });
-  };
-
-  const handleAISuggestionUpdate = (newSuggestion) => {
-    setSuggestion(newSuggestion);
-  };
-
   const handleAIAddTask = async (title, priority = 'medium') => {
     if (!user || !title.trim()) return;
     logger.task('AI requesting to add task:', { title, priority });
@@ -591,7 +577,6 @@ export default function DashboardPage() {
             <div className="w-full space-y-3 sm:space-y-4 lg:space-y-5">
               <EmotionCard
                 currentEmotion={currentEmotion}
-                onEmotionChange={handleEmotionChange}
                 emotionData={latestEmotionData}
               />
               {behaviorPatterns && (
@@ -836,7 +821,7 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {latestEmotionData && latestEmotionData.source === 'detection' && (
+              {latestEmotionData && (latestEmotionData.source === 'detection' || latestEmotionData.source === 'ai') && (
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20">

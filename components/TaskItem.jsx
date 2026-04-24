@@ -40,7 +40,7 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdatePriority })
       <select
         value={task.priority}
         onChange={(e) => onUpdatePriority(task.id, e.target.value)}
-        className={`px-4 py-3 rounded-full text-xs font-medium border ${getPriorityColor()} bg-transparent cursor-pointer transition-all duration-300 min-h-[44px] flex items-center justify-center`}
+        className={`px-4 py-2 rounded-full text-xs font-medium border ${getPriorityColor()} bg-transparent cursor-pointer transition-all duration-300`}
       >
         <option value="low" className="bg-gray-900">Low</option>
         <option value="medium" className="bg-gray-900">Medium</option>

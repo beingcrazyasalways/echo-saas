@@ -1,40 +1,32 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default function FloatingButton({ onClick, currentEmotion }) {
-  const getGlow = () => {
+  const getGlowColor = () => {
     switch (currentEmotion) {
-      case 'stressed':
-        return 'shadow-amber-500/50';
-      case 'calm':
-        return 'shadow-teal-500/50';
-      case 'focused':
-        return 'shadow-indigo-500/50';
-      default:
-        return 'shadow-violet-500/50';
+      case 'stressed': return 'shadow-neon-red';
+      case 'calm': return 'shadow-neon-blue';
+      case 'focused': return 'shadow-neon-cyan';
+      default: return 'shadow-neon-purple';
     }
   };
 
   const getGradient = () => {
     switch (currentEmotion) {
-      case 'stressed':
-        return 'from-amber-500 to-orange-500';
-      case 'calm':
-        return 'from-teal-500 to-cyan-500';
-      case 'focused':
-        return 'from-indigo-500 to-purple-500';
-      default:
-        return 'from-violet-500 to-pink-500';
+      case 'stressed': return 'from-red-500 to-orange-500';
+      case 'calm': return 'from-blue-500 to-indigo-500';
+      case 'focused': return 'from-cyan-500 to-teal-500';
+      default: return 'from-neon-cyan to-neon-purple';
     }
   };
 
   return (
     <button
       onClick={onClick}
-      className={`fixed bottom-20 sm:bottom-8 right-4 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${getGradient()} ${getGlow()} shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center z-40`}
+      className={`fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-to-br ${getGradient()} ${getGlowColor()} flex items-center justify-center hover:scale-110 transition-transform duration-200 z-50`}
     >
-      <MessageSquare size={24} className="text-white" />
+      <Sparkles size={28} className="text-white" />
     </button>
   );
 }

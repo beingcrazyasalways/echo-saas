@@ -78,8 +78,8 @@ export default function ProfilePanel({ isOpen, onClose, userProfile, user, onPro
         {/* Content */}
         <div className="p-4 sm:p-6 space-y-4">
           {/* Avatar */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-indigo-500 flex items-center justify-center shadow-lg">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-teal-500 to-indigo-500 flex items-center justify-center shadow-lg">
               {userProfile?.avatar_url ? (
                 <img
                   src={userProfile.avatar_url}

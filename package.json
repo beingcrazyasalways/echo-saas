@@ -6,16 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.49.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "@tanstack/react-query": "^5.99.2",
+    "lucide-react": "^0.454.0",
     "next": "14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@supabase/supabase-js": "^2.45.4",
-    "lucide-react": "^0.454.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
