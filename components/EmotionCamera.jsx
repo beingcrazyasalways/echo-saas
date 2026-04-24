@@ -14,6 +14,7 @@ export default function EmotionCamera() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [user, setUser] = useState(null);
   const [autoDetect, setAutoDetect] = useState(false);
+  const [message, setMessage] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -140,6 +141,8 @@ export default function EmotionCamera() {
     isDetectingRef.current = true;
     setIsAnalyzing(true);
     setError(null);
+    setMessage(null);
+    setEmotionResult(null);
 
     try {
       const blob = await captureFrame();
@@ -149,6 +152,12 @@ export default function EmotionCamera() {
       }
 
       const result = await detectEmotion(blob);
+      
+      // Handle no_face with human feedback
+      if (result.emotion === 'no_face') {
+        setMessage('Face not detected. Please look at the camera');
+        return;
+      }
       
       // Smooth UI update
       setEmotionResult({
@@ -182,10 +191,17 @@ export default function EmotionCamera() {
 
     setIsAnalyzing(true);
     setError(null);
+    setMessage(null);
     setEmotionResult(null);
 
     try {
       const result = await detectEmotion(file);
+      
+      // Handle no_face with human feedback
+      if (result.emotion === 'no_face') {
+        setMessage('Face not detected. Please look at the camera');
+        return;
+      }
       
       setEmotionResult({
         emotion: result.emotion,
@@ -283,6 +299,26 @@ export default function EmotionCamera() {
     }
   };
 
+  const getEmotionGlow = () => {
+    if (!emotionResult) return '';
+    
+    switch (emotionResult.emotion) {
+      case 'stressed':
+      case 'angry':
+      case 'fearful':
+        return 'shadow-red-500/50';
+      case 'calm':
+      case 'neutral':
+        return 'shadow-blue-500/50';
+      case 'happy':
+        return 'shadow-green-500/50';
+      case 'focused':
+        return 'shadow-cyan-500/50';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="w-full">
       {/* Camera Preview / Uploaded Image */}
@@ -307,6 +343,17 @@ export default function EmotionCamera() {
           </div>
         )}
         <canvas ref={canvasRef} className="hidden" />
+        
+        {/* AI Analyzing Overlay */}
+        {isAnalyzing && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center">
+              <RefreshCw className="animate-spin text-teal-400 mx-auto mb-3" size={32} />
+              <p className="text-white text-sm sm:text-base">Analyzing emotion...</p>
+              <p className="text-gray-400 text-xs mt-2">AI analyzing your mood to personalize your productivity</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Controls */}
@@ -391,9 +438,25 @@ export default function EmotionCamera() {
         </div>
       )}
 
+      {/* No Face Message with Retry */}
+      {message && (
+        <div className="mb-4 p-4 sm:p-6 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
+          <div className="flex justify-center mb-3">
+            <Camera size={32} className="text-amber-400" />
+          </div>
+          <p className="text-amber-400 text-sm sm:text-base mb-4">{message}</p>
+          <button
+            onClick={detectEmotionHandler}
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity text-sm sm:text-base"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
       {/* Emotion Result */}
       {emotionResult && (
-        <div className={`p-4 sm:p-6 rounded-xl bg-gradient-to-r ${getEmotionColor()} bg-opacity-20 border border-white/20`}>
+        <div className={`p-4 sm:p-6 rounded-xl bg-gradient-to-r ${getEmotionColor()} bg-opacity-20 border border-white/20 shadow-lg ${getEmotionGlow()} transition-all duration-300`}>
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-300 mb-1">Detected Emotion</p>
