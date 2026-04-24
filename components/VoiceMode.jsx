@@ -14,7 +14,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const touchStartRef = useRef(null);
   const listeningTimeoutRef = useRef(null);
   
-  const LISTENING_TIMEOUT = 8000; // 8 seconds max listening time
+  const LISTENING_TIMEOUT = 5000; // 5 seconds max listening time
 
   useEffect(() => {
     // Initialize Speech Recognition
@@ -201,10 +201,21 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     if (voiceState === 'idle') {
       startListening();
     } else if (voiceState === 'listening') {
+      // Manual stop - user clicked mic while listening
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      setVoiceState('idle');
+      if (listeningTimeoutRef.current) {
+        clearTimeout(listeningTimeoutRef.current);
+        listeningTimeoutRef.current = null;
+      }
+      
+      // If we have transcript, send it; otherwise show error
+      if (transcript && transcript.trim().length > 0) {
+        handleSendToAI(transcript.trim());
+      } else {
+        handleNoSpeechDetected();
+      }
     } else if (voiceState === 'speaking') {
       if (speechSynthRef.current) {
         speechSynthRef.current.cancel();
@@ -348,7 +359,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         <div className="mt-12 text-center">
           <p className="text-white/40 text-sm">
             {voiceState === 'idle' && 'Tap the microphone to start voice conversation'}
-            {voiceState === 'listening' && 'Speak naturally. I\'ll listen until you finish.'}
+            {voiceState === 'listening' && 'Tap microphone to stop and send'}
             {voiceState === 'thinking' && 'Processing your request...'}
             {voiceState === 'speaking' && 'Listening to response...'}
           </p>
