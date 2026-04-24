@@ -490,6 +490,14 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSuggestionAction = () => {
+    console.log('Suggestion clicked');
+    if (suggestion?.task) {
+      handleAIAddTask(suggestion.task.title, suggestion.task.priority);
+    }
+    setSuggestion(null);
+  };
+
   const getEmotionGlow = (emotion) => {
     switch (emotion) {
       case 'stressed': return 'shadow-amber-500/30';
