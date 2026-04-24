@@ -28,6 +28,10 @@ async def detect_emotion(file: UploadFile = File(...)):
     Returns:
         JSON with emotion label and confidence
     """
+    # Validate input
+    if file is None:
+        return {"error": "No file provided"}
+    
     try:
         # Read file content
         contents = await file.read()
@@ -40,6 +44,9 @@ async def detect_emotion(file: UploadFile = File(...)):
         
         if image is None:
             raise HTTPException(status_code=400, detail="Invalid image file")
+        
+        # Resize image to reduce processing load before inference
+        image = cv2.resize(image, (48, 48))
         
         # Predict emotion
         emotion, confidence = predict_emotion(image)

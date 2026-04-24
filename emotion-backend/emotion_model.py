@@ -112,20 +112,25 @@ class EmotionRecognizer:
         return DEFAULT_LABELS
 
     def _load_weights(self) -> None:
-        if not self.model_path.exists():
-            return
+        try:
+            if not self.model_path.exists():
+                return
 
-        checkpoint = torch.load(self.model_path, map_location=self.device)
-        state_dict = checkpoint.get("model_state", checkpoint)
+            checkpoint = torch.load(self.model_path, map_location=self.device)
+            state_dict = checkpoint.get("model_state", checkpoint)
 
-        if "labels" in checkpoint:
-            self.labels = [display_label(label) for label in checkpoint["labels"]]
-            self.model = EmotionCNN(num_classes=len(self.labels)).to(self.device)
+            if "labels" in checkpoint:
+                self.labels = [display_label(label) for label in checkpoint["labels"]]
+                self.model = EmotionCNN(num_classes=len(self.labels)).to(self.device)
 
-        self.model.load_state_dict(state_dict)
-        self.model.eval()
-        self.available = True
-        self.status = f"Emotion model loaded on {self.device}."
+            self.model.load_state_dict(state_dict)
+            self.model.eval()
+            self.available = True
+            self.status = f"Emotion model loaded on {self.device}."
+        except Exception as e:
+            print("Model load failed:", e)
+            self.available = False
+            self.status = f"Model load failed: {str(e)}"
 
     def detect_face(self, image: np.ndarray) -> np.ndarray | None:
         """Detect face in image and return cropped face, or None if no face detected."""
