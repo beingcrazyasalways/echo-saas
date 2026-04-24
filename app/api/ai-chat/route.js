@@ -38,7 +38,7 @@ export async function POST(request) {
           }
         ],
         temperature: 0.7,
-        max_tokens: 500
+        max_tokens: 150
       })
     });
 
@@ -124,5 +124,5 @@ What you help with:
 - Emotional support and wellness (with genuine empathy)
 - Work-life balance (respecting boundaries)
 
-Keep responses conversational and human-like. Avoid robotic phrases like "I understand" or "Here are some suggestions." Instead, say things like "I get what you mean" or "Here's what I'm thinking." Keep it under 150 words unless they ask for more detail. Be specific and actionable in your suggestions, but deliver them naturally.`;
+Keep responses conversational and human-like. Avoid robotic phrases like "I understand" or "Here are some suggestions." Instead, say things like "I get what you mean" or "Here's what I'm thinking." Keep it VERY SHORT - under 75 words max. Be direct and concise. One or two sentences is ideal.`;
 }
