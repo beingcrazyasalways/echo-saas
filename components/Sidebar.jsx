@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   Brain,
-  Camera
+  Camera,
+  MessageSquare
 } from 'lucide-react';
 import { getEmotionConfig, getEmotionDisplayName } from '@/lib/emotionConfig';
 
@@ -21,6 +22,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
     { icon: Camera, label: 'Emotion', path: '/emotion-v2' },
+    { icon: MessageSquare, label: 'AI Chat', path: '/chat' },
     { icon: BarChart3, label: 'Analytics', path: '/analytics' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
