@@ -11,6 +11,7 @@ import {
   Brain,
   Camera
 } from 'lucide-react';
+import { getEmotionConfig, getEmotionDisplayName } from '@/lib/emotionConfig';
 
 export default function Sidebar({ currentEmotion, isOpen, onClose }) {
   const router = useRouter();
@@ -30,14 +31,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
     router.push('/login');
   };
 
-  const getEmotionColor = () => {
-    switch (currentEmotion) {
-      case 'stressed': return 'text-amber-400';
-      case 'calm': return 'text-teal-400';
-      case 'focused': return 'text-indigo-400';
-      default: return 'text-violet-400';
-    }
-  };
+  const config = getEmotionConfig(currentEmotion);
 
   return (
     <>
@@ -79,11 +73,11 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
         <div className="p-4 sm:p-6 border-t border-white/10">
           <div className="mb-4 sm:mb-6 px-4 sm:px-5 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/5">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Brain className={`w-[18px] h-[18px] sm:w-5 sm:h-5 ${getEmotionColor()}`} />
+              <Brain className={`w-[18px] h-[18px] sm:w-5 sm:h-5 ${config.color}`} />
               <div>
                 <span className="text-gray-400 text-xs">Current</span>
-                <span className={`capitalize font-semibold ml-2 text-sm sm:text-base ${getEmotionColor()}`}>
-                  {currentEmotion || 'Not set'}
+                <span className={`capitalize font-semibold ml-2 text-sm sm:text-base ${config.color}`}>
+                  {getEmotionDisplayName(currentEmotion) || 'Not set'}
                 </span>
               </div>
             </div>

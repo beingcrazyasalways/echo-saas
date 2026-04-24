@@ -5,6 +5,7 @@ import { Camera, StopCircle, RefreshCw, Upload } from 'lucide-react';
 import { detectEmotion } from '@/lib/emotionApi';
 import { supabase } from '@/lib/supabaseClient';
 import { getCurrentUser } from '@/lib/supabaseClient';
+import { getEmotionConfig, getEmotionDisplayName, isCustomEmotion } from '@/lib/emotionConfig';
 
 export default function EmotionCamera({ onEmotionDetected }) {
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -322,7 +323,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
       'focused': 'focused',
       'surprised': 'calm',
     };
-    return moodMap[emotion] || 'calm';
+    return moodMap[emotion] || emotion || 'calm';
   };
 
   const mapEmotionToStress = (emotion) => {
@@ -341,6 +342,18 @@ export default function EmotionCamera({ onEmotionDetected }) {
       'model_missing': 30,
     };
     return stressMap[emotion] || 30;
+  };
+
+  const getEmotionColor = () => {
+    if (!emotionResult) return 'from-gray-500 to-gray-600';
+    const config = getEmotionConfig(emotionResult.emotion);
+    return config.gradient || 'from-gray-500 to-gray-600';
+  };
+
+  const getEmotionGlow = () => {
+    if (!emotionResult) return '';
+    const config = getEmotionConfig(emotionResult.emotion);
+    return config.glow || '';
   };
 
   const insertEmotion = async (result) => {
@@ -364,46 +377,6 @@ export default function EmotionCamera({ onEmotionDetected }) {
       }
     } catch (err) {
       console.error('Error inserting emotion:', err);
-    }
-  };
-
-  const getEmotionColor = () => {
-    if (!emotionResult) return 'from-gray-500 to-gray-600';
-    
-    switch (emotionResult.emotion) {
-      case 'stressed':
-      case 'angry':
-      case 'fearful':
-        return 'from-red-500 to-orange-500';
-      case 'calm':
-      case 'neutral':
-        return 'from-blue-500 to-cyan-500';
-      case 'happy':
-        return 'from-green-500 to-emerald-500';
-      case 'focused':
-        return 'from-purple-500 to-indigo-500';
-      default:
-        return 'from-gray-500 to-gray-600';
-    }
-  };
-
-  const getEmotionGlow = () => {
-    if (!emotionResult) return '';
-    
-    switch (emotionResult.emotion) {
-      case 'stressed':
-      case 'angry':
-      case 'fearful':
-        return 'shadow-red-500/50';
-      case 'calm':
-      case 'neutral':
-        return 'shadow-blue-500/50';
-      case 'happy':
-        return 'shadow-green-500/50';
-      case 'focused':
-        return 'shadow-cyan-500/50';
-      default:
-        return '';
     }
   };
 
@@ -585,7 +558,12 @@ export default function EmotionCamera({ onEmotionDetected }) {
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-300 mb-1">Detected Emotion</p>
-              <p className="text-xl sm:text-2xl font-bold text-white capitalize">{emotionResult.emotion}</p>
+              <p className={`text-xl sm:text-2xl font-bold capitalize ${getEmotionConfig(emotionResult.emotion).color}`}>
+                {getEmotionDisplayName(emotionResult.emotion)}
+              </p>
+              {isCustomEmotion(emotionResult.emotion) && (
+                <p className="text-xs text-gray-400 mt-1">Custom emotion detected</p>
+              )}
             </div>
             <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-300 mb-1">Confidence</p>

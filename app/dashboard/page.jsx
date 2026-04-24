@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase, signOut, getCurrentUser } from '@/lib/supabaseClient';
 import { fetchTasks, addTask, toggleTask, deleteTask, updateTaskPriority } from '@/lib/tasks';
 import { getLatestEmotion } from '@/lib/emotions';
-import { generateSuggestion, getEmotionGlow } from '@/lib/aiSuggestions';
+import { generateSuggestion, getEmotionColor, getEmotionGlow as getAiEmotionGlow } from '@/lib/aiSuggestions';
+import { getEmotionConfig, getEmotionDisplayName } from '@/lib/emotionConfig';
 import { logActivity, fetchRecentActivities, getTodayActivities, getLastVisit } from '@/lib/activities';
 import { prioritizeTasks, analyzeUserState, generateDailyBriefing, generateMicroNudge, shouldTriggerFocusMode } from '@/lib/proactiveAI';
 import { analyzeBehaviorPatterns, getUserProfile, updateDailySummary, calculateProductivityScore, logTaskBehavior, logEmotionBehavior, logSessionBehavior, getTodayMetrics, calculateStreak, calculateXP } from '@/lib/behaviorIntelligence';
@@ -511,21 +512,20 @@ export default function DashboardPage() {
   };
 
   const getEmotionGlow = (emotion) => {
-    switch (emotion) {
-      case 'stressed': return 'shadow-amber-500/30';
-      case 'calm': return 'shadow-teal-500/30';
-      case 'focused': return 'shadow-indigo-500/30';
-      default: return 'shadow-violet-500/30';
-    }
+    const config = getEmotionConfig(emotion);
+    return config.glow || 'shadow-violet-500/30';
   };
 
   const getEmotionGradient = (emotion) => {
-    switch (emotion) {
-      case 'stressed': return 'from-slate-900 via-amber-900/30 to-slate-900';
-      case 'calm': return 'from-slate-900 via-teal-900/30 to-slate-900';
-      case 'focused': return 'from-slate-900 via-indigo-900/30 to-slate-900';
-      default: return 'from-slate-900 via-violet-900/30 to-slate-900';
-    }
+    const config = getEmotionConfig(emotion);
+    // Map gradient to background gradient format
+    const gradientMap = {
+      'from-red-500/20 to-orange-500/20': 'from-slate-900 via-amber-900/30 to-slate-900',
+      'from-blue-500/20 to-cyan-500/20': 'from-slate-900 via-teal-900/30 to-slate-900',
+      'from-cyan-500/20 to-indigo-500/20': 'from-slate-900 via-indigo-900/30 to-slate-900',
+      'from-violet-500/20 to-purple-500/20': 'from-slate-900 via-violet-900/30 to-slate-900',
+    };
+    return gradientMap[config.gradient] || 'from-slate-900 via-violet-900/30 to-slate-900';
   };
 
   if (loading) {

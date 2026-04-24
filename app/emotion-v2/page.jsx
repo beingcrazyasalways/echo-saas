@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/supabaseClient';
 import EmotionCamera from '@/components/EmotionCamera';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { getEmotionConfig, getEmotionDisplayName, isCustomEmotion } from '@/lib/emotionConfig';
 
 export default function EmotionV2Page() {
   const [mood, setMood] = useState('calm');
@@ -20,26 +21,10 @@ export default function EmotionV2Page() {
     localStorage.setItem('currentEmotion', mappedEmotion);
   };
 
-  const getEmotionGlow = () => {
-    switch (mood) {
-      case 'stressed': return 'shadow-red-500/30';
-      case 'calm': return 'shadow-blue-500/30';
-      case 'focused': return 'shadow-cyan-500/30';
-      default: return 'shadow-violet-500/30';
-    }
-  };
-
-  const getEmotionGradient = () => {
-    switch (mood) {
-      case 'stressed': return 'from-red-500/20 to-orange-500/20 border-red-400/30';
-      case 'calm': return 'from-blue-500/20 to-cyan-500/20 border-blue-400/30';
-      case 'focused': return 'from-cyan-500/20 to-indigo-500/20 border-cyan-400/30';
-      default: return 'from-violet-500/20 to-purple-500/20 border-violet-400/30';
-    }
-  };
+  const config = getEmotionConfig(mood);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900 ${getEmotionGlow()} transition-all duration-500`}>
+    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900 ${config.glow} transition-all duration-500`}>
       <div className="flex flex-col lg:flex-row">
         <Sidebar 
           currentEmotion={mood}
@@ -69,14 +54,19 @@ export default function EmotionV2Page() {
 
               {/* Current Mood Display */}
               {mood && (
-                <div className={`backdrop-blur-xl bg-gradient-to-r ${getEmotionGradient()} rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl transition-all duration-300 hover:scale-105`}>
+                <div className={`backdrop-blur-xl bg-gradient-to-r ${config.gradient} ${config.border} rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl transition-all duration-300 hover:scale-105`}>
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="p-3 sm:p-4 rounded-xl bg-white/10">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${mood === 'stressed' ? 'bg-red-500' : mood === 'calm' ? 'bg-blue-500' : 'bg-cyan-500'}`} />
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${config.color.replace('text-', 'bg-').replace('-400', '-500')}`} />
                     </div>
                     <div>
                       <p className="text-xs sm:text-sm text-gray-400 mb-1">Current Mood</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white capitalize">{mood}</p>
+                      <p className={`text-xl sm:text-2xl lg:text-3xl font-bold capitalize ${config.color}`}>
+                        {getEmotionDisplayName(mood)}
+                      </p>
+                      {isCustomEmotion(mood) && (
+                        <p className="text-xs text-gray-400 mt-1">Custom emotion detected</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -86,42 +76,18 @@ export default function EmotionV2Page() {
               <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl transition-all duration-300 hover:scale-105">
                 <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">AI Suggestions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {mood === 'stressed' && (
-                    <>
-                      <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
-                        <p className="text-sm text-gray-400 mb-1">Quick Win</p>
-                        <p className="text-white font-medium">Take a short break</p>
-                      </div>
-                      <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
-                        <p className="text-sm text-gray-400 mb-1">Small Task</p>
-                        <p className="text-white font-medium">Complete a pending task</p>
-                      </div>
-                    </>
-                  )}
-                  {mood === 'calm' && (
-                    <>
-                      <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
-                        <p className="text-sm text-gray-400 mb-1">Planning</p>
-                        <p className="text-white font-medium">Plan your day</p>
-                      </div>
-                      <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
-                        <p className="text-sm text-gray-400 mb-1">Learning</p>
-                        <p className="text-white font-medium">Learn something new</p>
-                      </div>
-                    </>
-                  )}
-                  {mood === 'focused' && (
-                    <>
-                      <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
-                        <p className="text-sm text-gray-400 mb-1">High Priority</p>
-                        <p className="text-white font-medium">Work on important task</p>
-                      </div>
-                      <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
-                        <p className="text-sm text-gray-400 mb-1">Deep Work</p>
-                        <p className="text-white font-medium">Finish pending work</p>
-                      </div>
-                    </>
-                  )}
+                  <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
+                    <p className="text-sm text-gray-400 mb-1">Quick Action</p>
+                    <p className="text-white font-medium">Log your current mood</p>
+                  </div>
+                  <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
+                    <p className="text-sm text-gray-400 mb-1">Wellness</p>
+                    <p className="text-white font-medium">Take a short break</p>
+                  </div>
+                  <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
+                    <p className="text-sm text-gray-400 mb-1">Productivity</p>
+                    <p className="text-white font-medium">Focus on a task</p>
+                  </div>
                 </div>
               </div>
             </div>

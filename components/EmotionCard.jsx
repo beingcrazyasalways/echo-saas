@@ -2,15 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { Camera, ArrowRight } from 'lucide-react';
+import { getEmotionConfig, getEmotionDisplayName, isCustomEmotion } from '@/lib/emotionConfig';
 
 export default function EmotionCard({ currentEmotion, emotionData }) {
   const router = useRouter();
 
-  const emotions = [
-    { value: 'stressed', label: 'Stressed', color: 'text-amber-400', bg: 'bg-amber-500/20', border: 'border-amber-400/30' },
-    { value: 'calm', label: 'Calm', color: 'text-teal-400', bg: 'bg-teal-500/20', border: 'border-teal-400/30' },
-    { value: 'focused', label: 'Focused', color: 'text-indigo-400', bg: 'bg-indigo-500/20', border: 'border-indigo-400/30' },
-  ];
+  const config = getEmotionConfig(currentEmotion);
 
   const stressScore = emotionData?.stress_score || emotionData?.stress_level || null;
   const confidence = emotionData?.confidence ? Math.round(emotionData.confidence * 100) : null;
@@ -51,11 +48,16 @@ export default function EmotionCard({ currentEmotion, emotionData }) {
 
       <div className="flex justify-center mb-6 sm:mb-8">
         <div className="relative w-24 h-24 sm:w-32 sm:h-32">
-          <div className={`absolute inset-0 rounded-full ${emotions.find(e => e.value === currentEmotion)?.bg || 'bg-violet-500/20'} border-2 ${emotions.find(e => e.value === currentEmotion)?.border || 'border-violet-400/30'} animate-pulse`}></div>
+          <div className={`absolute inset-0 rounded-full ${config.bg} border-2 ${config.border} animate-pulse`}></div>
           <div className="absolute inset-2 rounded-full bg-slate-900 flex items-center justify-center">
             {currentEmotion && (
               <div className="text-center">
-                <p className={`text-lg sm:text-2xl font-bold capitalize ${emotions.find(e => e.value === currentEmotion)?.color}`}>{currentEmotion}</p>
+                <p className={`text-lg sm:text-2xl font-bold capitalize ${config.color}`}>
+                  {getEmotionDisplayName(currentEmotion)}
+                </p>
+                {isCustomEmotion(currentEmotion) && (
+                  <p className="text-xs text-gray-400 mt-1">Custom</p>
+                )}
               </div>
             )}
           </div>
