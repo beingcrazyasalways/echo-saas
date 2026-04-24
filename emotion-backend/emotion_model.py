@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -86,8 +87,9 @@ class EmotionRecognizer:
         label_path: str | Path = "models/emotion_labels.json",
         device: str | None = None,
     ) -> None:
-        self.model_path = Path(model_path)
-        self.label_path = Path(label_path)
+        BASE_DIR = os.path.dirname(__file__)
+        self.model_path = Path(os.path.join(BASE_DIR, model_path))
+        self.label_path = Path(os.path.join(BASE_DIR, label_path))
         self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
         self.labels = self._load_labels()
         self.model = EmotionCNN(num_classes=len(self.labels)).to(self.device)
