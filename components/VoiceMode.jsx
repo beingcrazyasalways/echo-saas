@@ -332,7 +332,9 @@ export default function VoiceMode({ currentEmotion, onClose }) {
             <p className="text-white text-lg font-medium">{transcript}</p>
           )}
           {debugInfo && (
-            <p className="text-xs text-gray-500 mt-2">{debugInfo}</p>
+            <div className="mt-4 p-3 bg-white/10 rounded-lg">
+              <p className="text-xs text-cyan-400 font-mono">{debugInfo}</p>
+            </div>
           )}
         </div>
 
