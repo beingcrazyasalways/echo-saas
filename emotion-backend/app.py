@@ -1,8 +1,7 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
-from io import BytesIO
 from emotion_model import predict_emotion
 
 app = FastAPI(title="Emotion Detection API")
@@ -20,10 +19,33 @@ app.add_middleware(
 @app.post("/detect-emotion")
 async def detect_emotion(file: UploadFile = File(...)):
     """
-    Stub endpoint for testing - returns fixed emotion response.
+    Detect emotion from uploaded image.
+    Falls back to calm/0.5 if anything goes wrong.
     """
-    print("API HIT")
-    return {"emotion": "calm", "confidence": 0.8}
+    try:
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if image is None:
+            return {"emotion": "calm", "confidence": 0.5}
+
+        # Resize to reduce processing load
+        image = cv2.resize(image, (48, 48))
+
+        # Try real model
+        emotion, confidence = predict_emotion(image)
+
+        # No face detected or model missing → fallback
+        if emotion in ("no_face", "model_missing") or confidence == 0.0:
+            return {"emotion": "calm", "confidence": 0.5}
+
+        return {"emotion": emotion, "confidence": float(confidence)}
+
+    except Exception as e:
+        print("ERROR:", e)
+        # Fallback (non-negotiable)
+        return {"emotion": "calm", "confidence": 0.5}
 
 
 @app.get("/")

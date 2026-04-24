@@ -178,11 +178,16 @@ class EmotionRecognizer:
 _recognizer: EmotionRecognizer | None = None
 
 
-def get_recognizer() -> EmotionRecognizer:
-    """Get or create the global emotion recognizer instance."""
+def get_recognizer() -> EmotionRecognizer | None:
+    """Get or create the global emotion recognizer instance. Returns None if model fails."""
     global _recognizer
     if _recognizer is None:
-        _recognizer = EmotionRecognizer()
+        try:
+            _recognizer = EmotionRecognizer()
+            print("Model loaded")
+        except Exception as e:
+            print("Model failed:", e)
+            _recognizer = None
     return _recognizer
 
 
@@ -195,16 +200,22 @@ def predict_emotion(image: np.ndarray) -> tuple[str, float]:
         
     Returns:
         Tuple of (emotion_label, confidence)
-        Returns ("no_face", 0.0) if no face detected
-        Returns ("model_missing", 0.0) if model not loaded
+        Falls back to ("calm", 0.5) if model not loaded or prediction fails
     """
     recognizer = get_recognizer()
     
-    # Detect face
-    face = recognizer.detect_face(image)
-    if face is None:
-        return "no_face", 0.0
-    
-    # Predict emotion
-    prediction = recognizer.predict(face)
-    return prediction.label, prediction.confidence
+    # Model not loaded → fallback
+    if recognizer is None:
+        return "calm", 0.5
+
+    try:
+        # Detect face
+        face = recognizer.detect_face(image)
+        if face is None:
+            return "no_face", 0.0
+        
+        # Predict emotion
+        prediction = recognizer.predict(face)
+        return prediction.label, prediction.confidence
+    except Exception:
+        return "calm", 0.5
