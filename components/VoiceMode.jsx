@@ -11,67 +11,27 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const recognitionRef = useRef(null);
   const speechSynthRef = useRef(null);
   const utteranceRef = useRef(null);
-  const silenceTimerRef = useRef(null);
   const touchStartRef = useRef(null);
-  const lastSpeechTimeRef = useRef(null);
-  const accumulatedTranscriptRef = useRef('');
-  const noSpeechTimeoutRef = useRef(null);
-  const listeningStartTimeRef = useRef(null);
-  
-  const SILENCE_THRESHOLD = 1500; // 1.5 seconds of silence before sending
-  const NO_SPEECH_TIMEOUT = 5000; // 5 seconds with no speech before error
 
   useEffect(() => {
     // Initialize Speech Recognition
     if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
+      recognitionRef.current.continuous = false; // Use single-shot mode for reliability
+      recognitionRef.current.interimResults = false;
       recognitionRef.current.lang = 'en-US';
       recognitionRef.current.maxAlternatives = 1;
 
       recognitionRef.current.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-
-        // Update accumulated transcript
-        if (finalTranscript) {
-          accumulatedTranscriptRef.current += finalTranscript;
-          lastSpeechTimeRef.current = Date.now();
-          
-          // Clear no-speech timeout when speech is detected
-          if (noSpeechTimeoutRef.current) {
-            clearTimeout(noSpeechTimeoutRef.current);
-            noSpeechTimeoutRef.current = null;
-          }
-        }
-
-        // Display current state
-        setTranscript(accumulatedTranscriptRef.current + interimTranscript);
-
-        // Reset and restart silence timer on any speech
-        if (silenceTimerRef.current) {
-          clearTimeout(silenceTimerRef.current);
-        }
-
-        // Start silence timer if we have content
-        if (accumulatedTranscriptRef.current || interimTranscript) {
-          silenceTimerRef.current = setTimeout(() => {
-            const finalText = accumulatedTranscriptRef.current.trim();
-            if (finalText.length > 2) { // Only send if we have meaningful content
-              handleSendToAI(finalText);
-            }
-          }, SILENCE_THRESHOLD);
+        const transcript = event.results[0][0].transcript;
+        setTranscript(transcript);
+        
+        // Send to AI immediately after speech is detected
+        if (transcript.trim().length > 0) {
+          handleSendToAI(transcript.trim());
+        } else {
+          handleNoSpeechDetected();
         }
       };
 
@@ -81,24 +41,18 @@ export default function VoiceMode({ currentEmotion, onClose }) {
           setVoiceState('idle');
           alert('Microphone permission denied. Please allow microphone access to use voice mode.');
         } else if (event.error === 'no-speech') {
-          // No speech detected, just restart
-          if (voiceState === 'listening' && !isExiting) {
-            try {
-              recognitionRef.current.start();
-            } catch (e) {
-              console.error('Failed to restart recognition:', e);
-            }
-          }
+          handleNoSpeechDetected();
+        } else {
+          handleNoSpeechDetected();
         }
       };
 
       recognitionRef.current.onend = () => {
-        // Auto-restart if still in listening state
+        // Recognition ended naturally
         if (voiceState === 'listening' && !isExiting) {
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            console.error('Failed to restart recognition:', e);
+          // If we're still in listening state but no speech was captured, show error
+          if (!transcript || transcript.trim().length === 0) {
+            handleNoSpeechDetected();
           }
         }
       };
@@ -113,17 +67,11 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-      }
-      if (noSpeechTimeoutRef.current) {
-        clearTimeout(noSpeechTimeoutRef.current);
-      }
       if (speechSynthRef.current) {
         speechSynthRef.current.cancel();
       }
     };
-  }, [voiceState, isExiting]);
+  }, [voiceState, isExiting, transcript]);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -132,54 +80,26 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     }
 
     try {
-      recognitionRef.current.start();
       setVoiceState('listening');
       setTranscript('');
-      accumulatedTranscriptRef.current = '';
-      listeningStartTimeRef.current = Date.now();
-
-      // Set no-speech timeout
-      if (noSpeechTimeoutRef.current) {
-        clearTimeout(noSpeechTimeoutRef.current);
-      }
-      noSpeechTimeoutRef.current = setTimeout(() => {
-        if (voiceState === 'listening' && accumulatedTranscriptRef.current.trim().length < 2) {
-          handleNoSpeechDetected();
-        }
-      }, NO_SPEECH_TIMEOUT);
+      recognitionRef.current.start();
     } catch (e) {
       console.error('Failed to start recognition:', e);
+      setVoiceState('idle');
     }
   };
 
   const handleNoSpeechDetected = () => {
-    stopListening();
     setVoiceState('speaking');
     setTranscript('');
-    accumulatedTranscriptRef.current = '';
     
     const errorMessage = "Sorry, I didn't catch that. Could you please speak again?";
     speak(errorMessage);
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
-    if (noSpeechTimeoutRef.current) {
-      clearTimeout(noSpeechTimeoutRef.current);
-      noSpeechTimeoutRef.current = null;
-    }
-  };
-
   const handleSendToAI = async (text) => {
-    stopListening();
     setVoiceState('thinking');
     setTranscript('');
-    accumulatedTranscriptRef.current = ''; // Reset accumulated transcript
 
     try {
       const stressLevel = localStorage.getItem('stressLevel') || null;
@@ -243,7 +163,9 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     if (voiceState === 'idle') {
       startListening();
     } else if (voiceState === 'listening') {
-      stopListening();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setVoiceState('idle');
     } else if (voiceState === 'speaking') {
       if (speechSynthRef.current) {
@@ -255,7 +177,9 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
   const handleExit = () => {
     setIsExiting(true);
-    stopListening();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
     if (speechSynthRef.current) {
       speechSynthRef.current.cancel();
     }
@@ -386,7 +310,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         <div className="mt-12 text-center">
           <p className="text-white/40 text-sm">
             {voiceState === 'idle' && 'Tap the microphone to start voice conversation'}
-            {voiceState === 'listening' && 'Speak naturally. I\'ll listen until you pause.'}
+            {voiceState === 'listening' && 'Speak naturally. I\'ll listen until you finish.'}
             {voiceState === 'thinking' && 'Processing your request...'}
             {voiceState === 'speaking' && 'Listening to response...'}
           </p>
