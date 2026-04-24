@@ -113,7 +113,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         speechSynthRef.current.cancel();
       }
     };
-  }, [voiceState, isExiting, transcript]);
+  }, [voiceState, isExiting]);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -217,16 +217,14 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
     utterance.onend = () => {
       console.log('Speech synthesis ended');
-      setDebugInfo('Speech ended, restarting listening');
-      setVoiceState('listening');
-      startListening();
+      setDebugInfo('Speech ended');
+      setVoiceState('idle'); // Return to idle instead of auto-restarting
     };
 
     utterance.onerror = (e) => {
       console.error('Speech synthesis error:', e);
-      setDebugInfo('Speech error, restarting listening');
-      setVoiceState('listening');
-      startListening();
+      setDebugInfo('Speech error');
+      setVoiceState('idle'); // Return to idle on error
     };
 
     utteranceRef.current = utterance;
@@ -404,6 +402,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
             {voiceState === 'thinking' && 'Processing your request...'}
             {voiceState === 'speaking' && 'Listening to response...'}
           </p>
+          <p className="text-white/30 text-xs mt-2">Tap microphone again after response to continue</p>
         </div>
       </div>
 
