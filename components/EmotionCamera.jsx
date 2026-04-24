@@ -31,6 +31,11 @@ export default function EmotionCamera({ onEmotionDetected }) {
     fetch('https://echo-saas.onrender.com').catch(() => {});
   }, []);
 
+  useEffect(() => {
+    console.log('videoRef.current:', videoRef.current);
+    console.log('isCameraActive:', isCameraActive);
+  }, [isCameraActive]);
+
   const loadUser = async () => {
     try {
       const { user: currentUser } = await getCurrentUser();
@@ -78,6 +83,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
 
   const startCamera = async () => {
     try {
+      console.log('Starting camera...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 1280 },
@@ -86,14 +92,22 @@ export default function EmotionCamera({ onEmotionDetected }) {
         }, 
         audio: false 
       });
+      console.log('Stream obtained:', stream);
       streamRef.current = stream;
+      
       if (videoRef.current) {
+        console.log('videoRef.current exists, attaching stream');
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        console.log('Video playing');
         setIsCameraActive(true);
         setError(null);
+      } else {
+        console.error('videoRef.current is null');
+        setError('Camera reference not found. Please refresh the page.');
       }
     } catch (err) {
+      console.error('Camera error:', err);
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setError('Camera permission denied. Please allow camera access in your browser settings.');
       } else if (err.name === 'NotFoundError') {
@@ -103,7 +117,6 @@ export default function EmotionCamera({ onEmotionDetected }) {
       } else {
         setError('Failed to access camera. Please check your permissions and try again.');
       }
-      console.error('Camera error:', err);
     }
   };
 
