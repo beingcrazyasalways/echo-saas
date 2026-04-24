@@ -69,7 +69,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon size={18} sm:size={20} />
+                <Icon className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 <span className="font-medium text-sm sm:text-base">{item.label}</span>
               </button>
             );
@@ -79,7 +79,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
         <div className="p-4 sm:p-6 border-t border-white/10">
           <div className="mb-4 sm:mb-6 px-4 sm:px-5 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/5">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Brain size={18} sm:size={20} className={getEmotionColor()} />
+              <Brain className={`w-[18px] h-[18px] sm:w-5 sm:h-5 ${getEmotionColor()}`} />
               <div>
                 <span className="text-gray-400 text-xs">Current</span>
                 <span className={`capitalize font-semibold ml-2 text-sm sm:text-base ${getEmotionColor()}`}>
@@ -92,7 +92,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
             onClick={handleLogout}
             className="w-full flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 sm:py-4 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all duration-300 text-sm sm:text-base"
           >
-            <LogOut size={18} sm:size={20} />
+            <LogOut className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
             <span className="font-medium">Logout</span>
           </button>
         </div>

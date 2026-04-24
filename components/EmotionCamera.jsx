@@ -380,14 +380,14 @@ export default function EmotionCamera({ onEmotionDetected }) {
               onClick={startCamera}
               className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Camera size={16} sm:size={20} />
+              <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
               Start Camera
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Upload size={16} sm:size={20} />
+              <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
               Upload Image
             </button>
             <input
@@ -407,12 +407,12 @@ export default function EmotionCamera({ onEmotionDetected }) {
             >
               {isAnalyzing ? (
                 <>
-                  <RefreshCw className="animate-spin" size={16} sm:size={20} />
+                  <RefreshCw className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />
                   Analyzing...
                 </>
               ) : (
                 <>
-                  <Camera size={16} sm:size={20} />
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                   Detect Once
                 </>
               )}
@@ -427,12 +427,12 @@ export default function EmotionCamera({ onEmotionDetected }) {
             >
               {autoDetect ? (
                 <>
-                  <StopCircle size={16} sm:size={20} />
+                  <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                   Stop Auto
                 </>
               ) : (
                 <>
-                  <RefreshCw size={16} sm:size={20} />
+                  <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
                   Auto Detect
                 </>
               )}
@@ -441,7 +441,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
               onClick={stopCamera}
               className="px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
             >
-              <StopCircle size={16} sm:size={20} />
+              <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </>
         )}

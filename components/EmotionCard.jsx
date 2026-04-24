@@ -37,7 +37,7 @@ export default function EmotionCard({ currentEmotion, emotionData }) {
       {isDetected && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-teal-500/10 rounded-xl border border-teal-400/30">
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            <Camera size={16} sm:size={18} className="text-teal-400" />
+            <Camera className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-teal-400" />
             <span className="text-xs sm:text-sm text-teal-400 font-medium">Detected via Camera</span>
           </div>
           {confidence && (
@@ -66,9 +66,9 @@ export default function EmotionCard({ currentEmotion, emotionData }) {
         onClick={() => router.push('/emotion-v2')}
         className="w-full py-3 sm:py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 text-sm sm:text-base"
       >
-        <Camera size={16} sm:size={20} />
+        <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
         Analyze Emotion
-        <ArrowRight size={16} sm:size={20} />
+        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     </div>
   );
