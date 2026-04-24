@@ -99,9 +99,9 @@ function buildSystemPrompt(emotion, stressLevel, taskLoad) {
   // Add task context if available
   let taskContext = '';
   if (taskLoad && taskLoad > 5) {
-    taskContext = ' You've got a lot on your plate. Let's prioritize so you don't get overwhelmed.';
+    taskContext = ` You've got a lot on your plate. Let's prioritize so you don't get overwhelmed.`;
   } else if (taskLoad && taskLoad > 0) {
-    taskContext = ' You have some tasks to handle. Let's work through them efficiently.';
+    taskContext = ` You have some tasks to handle. Let's work through them efficiently.`;
   }
 
   return `You are ECHO, an emotionally aware AI assistant and friend. You're not a robot - you're a warm, understanding conversational partner who genuinely cares about the user's wellbeing.
