@@ -232,30 +232,31 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   };
 
   const handleMicClick = () => {
-    if (voiceState === 'idle') {
-      startListening();
-    } else if (voiceState === 'listening') {
-      // Manual stop - user clicked mic while listening
-      if (recognitionRef.current) {
+    // Always clear everything first for fresh start
+    if (recognitionRef.current) {
+      try {
         recognitionRef.current.stop();
+      } catch (e) {
+        console.log('Error stopping recognition:', e);
       }
-      if (listeningTimeoutRef.current) {
-        clearTimeout(listeningTimeoutRef.current);
-        listeningTimeoutRef.current = null;
-      }
-      
-      // If we have transcript, send it; otherwise show error
-      if (transcript && transcript.trim().length > 0) {
-        handleSendToAI(transcript.trim());
-      } else {
-        handleNoSpeechDetected();
-      }
-    } else if (voiceState === 'speaking') {
-      if (speechSynthRef.current) {
-        speechSynthRef.current.cancel();
-      }
-      setVoiceState('idle');
     }
+    if (listeningTimeoutRef.current) {
+      clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = null;
+    }
+    if (speechSynthRef.current) {
+      speechSynthRef.current.cancel();
+    }
+    
+    // Reset state
+    setVoiceState('idle');
+    setTranscript('');
+    setDebugInfo('');
+    
+    // Start fresh listening
+    setTimeout(() => {
+      startListening();
+    }, 100);
   };
 
   const handleExit = () => {
@@ -398,11 +399,11 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         <div className="mt-12 text-center">
           <p className="text-white/40 text-sm">
             {voiceState === 'idle' && 'Tap the microphone to start voice conversation'}
-            {voiceState === 'listening' && 'Tap microphone to stop and send'}
+            {voiceState === 'listening' && 'Listening...'}
             {voiceState === 'thinking' && 'Processing your request...'}
             {voiceState === 'speaking' && 'Listening to response...'}
           </p>
-          <p className="text-white/30 text-xs mt-2">Tap microphone again after response to continue</p>
+          <p className="text-white/30 text-xs mt-2">Tap microphone anytime to restart</p>
         </div>
       </div>
 
