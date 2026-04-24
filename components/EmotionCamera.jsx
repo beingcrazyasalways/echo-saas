@@ -410,18 +410,21 @@ export default function EmotionCamera({ onEmotionDetected }) {
             alt="Uploaded" 
             className="w-full h-full object-cover" 
           />
-        ) : isCameraActive ? (
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted 
-            className="w-full h-full object-cover" 
-          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500">
-            <Camera className="w-16 h-16" />
-          </div>
+          <>
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
+            />
+            {!isCameraActive && (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                <Camera className="w-16 h-16" />
+              </div>
+            )}
+          </>
         )}
         <canvas ref={canvasRef} className="hidden" />
         
