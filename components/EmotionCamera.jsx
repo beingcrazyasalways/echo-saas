@@ -381,9 +381,9 @@ export default function EmotionCamera({ onEmotionDetected }) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-black">
       {/* Camera Preview / Uploaded Image */}
-      <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-4">
+      <div className="relative h-[75vh] sm:h-[500px] w-full max-w-3xl mx-auto bg-black rounded-2xl overflow-hidden mb-4 sm:mb-6 transition-all duration-300">
         {uploadedImage ? (
           <img 
             src={uploadedImage} 
@@ -397,7 +397,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
               autoPlay 
               playsInline 
               muted 
-              className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
+              className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'} transition-opacity duration-300`}
             />
             {!isCameraActive && (
               <div className="w-full h-full flex items-center justify-center text-gray-500">
@@ -453,20 +453,20 @@ export default function EmotionCamera({ onEmotionDetected }) {
         )}
       </div>
 
-      {/* Controls */}
-      <div className="flex gap-2 sm:gap-3 mb-4">
+      {/* Controls - Bottom overlay on mobile, below camera on desktop */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6 px-4 sm:px-0">
         {!isCameraActive ? (
           <>
             <button
               onClick={startCamera}
-              className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="flex-1 py-3 sm:py-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
               Start Camera
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="flex-1 py-3 sm:py-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
               Upload Image
@@ -484,7 +484,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
             <button
               onClick={detectEmotionHandler}
               disabled={isAnalyzing || autoDetect || !faceAligned}
-              className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              className="flex-1 py-3 sm:py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               title={!faceAligned ? "Align face properly for best accuracy" : ""}
             >
               {isAnalyzing ? (
@@ -501,7 +501,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
             </button>
             <button
               onClick={autoDetect ? stopAutoDetection : startAutoDetection}
-              className={`flex-1 py-2 sm:py-3 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base ${
+              className={`flex-1 py-3 sm:py-2 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm sm:text-base ${
                 autoDetect 
                   ? 'bg-gradient-to-r from-red-500 to-pink-500' 
                   : 'bg-gradient-to-r from-green-500 to-emerald-500'
@@ -521,7 +521,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
             </button>
             <button
               onClick={stopCamera}
-              className="px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
+              className="px-4 sm:px-3 py-3 sm:py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
             >
               <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
