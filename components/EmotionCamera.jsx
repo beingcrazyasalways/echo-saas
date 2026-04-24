@@ -16,6 +16,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const [autoDetect, setAutoDetect] = useState(false);
   const [message, setMessage] = useState(null);
   const [lastEmotion, setLastEmotion] = useState(null);
+  const [faceAligned, setFaceAligned] = useState(false);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -97,6 +98,11 @@ export default function EmotionCamera({ onEmotionDetected }) {
         setError(null);
         setMessage('Camera started successfully');
         setTimeout(() => setMessage(null), 2000);
+        
+        // Simulate face alignment after 2 seconds
+        setTimeout(() => {
+          setFaceAligned(true);
+        }, 2000);
       } else {
         setError('Camera reference not found. Please refresh the page.');
       }
@@ -119,6 +125,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
       streamRef.current = null;
     }
     setIsCameraActive(false);
+    setFaceAligned(false);
   };
 
   const captureFrame = () => {
@@ -424,6 +431,39 @@ export default function EmotionCamera({ onEmotionDetected }) {
                 <Camera className="w-16 h-16" />
               </div>
             )}
+            
+            {/* Face Frame Overlay */}
+            {isCameraActive && !isAnalyzing && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Dark overlay mask */}
+                <div className="absolute inset-0 bg-black/40" />
+                
+                {/* Face frame */}
+                <div className={`relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 border-2 rounded-full ${
+                  faceAligned 
+                    ? 'border-green-400 shadow-[0_0_30px_rgba(74,222,128,0.5)]' 
+                    : 'border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.5)] animate-pulse'
+                } backdrop-blur-sm bg-black/20 flex items-center justify-center`}>
+                  {/* Corner guides */}
+                  <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-cyan-400 rounded-tl-lg" />
+                  <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-cyan-400 rounded-tr-lg" />
+                  <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-cyan-400 rounded-bl-lg" />
+                  <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-cyan-400 rounded-br-lg" />
+                  
+                  {/* Helper text */}
+                  <div className="text-center px-4">
+                    <p className={`text-xs sm:text-sm font-medium ${
+                      faceAligned ? 'text-green-400' : 'text-cyan-400'
+                    }`}>
+                      {faceAligned ? '✓ Good position' : 'Position your face inside the frame'}
+                    </p>
+                    {!faceAligned && (
+                      <p className="text-xs text-gray-400 mt-1">Move closer to center</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
         <canvas ref={canvasRef} className="hidden" />
@@ -470,8 +510,9 @@ export default function EmotionCamera({ onEmotionDetected }) {
           <>
             <button
               onClick={detectEmotionHandler}
-              disabled={isAnalyzing || autoDetect}
+              disabled={isAnalyzing || autoDetect || !faceAligned}
               className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              title={!faceAligned ? "Align face properly for best accuracy" : ""}
             >
               {isAnalyzing ? (
                 <>
