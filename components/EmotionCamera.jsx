@@ -19,14 +19,17 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const [lastEmotion, setLastEmotion] = useState(null);
   const [faceAligned, setFaceAligned] = useState(false);
   const [faceInFrame, setFaceInFrame] = useState(false);
+  const [detectionMode, setDetectionMode] = useState('idle'); // idle, capturing, analyzing, result_ready, cooldown
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const fileInputRef = useRef(null);
   const detectionTimerRef = useRef(null);
-  const isDetectingRef = useRef(false);
+  const isProcessingRef = useRef(false); // Lock to prevent parallel detection
   const fallbackTimerRef = useRef(null);
+  const lastFacePositionRef = useRef(null); // Track face stability
+  const lastDetectionTimeRef = useRef(0); // Track detection throttling
 
   useEffect(() => {
     loadUser();
@@ -43,6 +46,21 @@ export default function EmotionCamera({ onEmotionDetected }) {
     }
   };
 
+  // Helper to check if detection should be throttled
+  const shouldThrottleDetection = () => {
+    const DETECTION_INTERVAL = 2500; // 2.5 seconds between detections
+    const now = Date.now();
+    const timeSinceLastDetection = now - lastDetectionTimeRef.current;
+    return timeSinceLastDetection < DETECTION_INTERVAL;
+  };
+
+  // Helper to check face stability (simulated)
+  const isFaceStable = () => {
+    // In a real implementation, this would compare face bounding boxes
+    // For now, we use the faceInFrame state as a proxy
+    return faceInFrame;
+  };
+
   useEffect(() => {
     return () => {
       stopCamera();
@@ -54,7 +72,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
   }, []);
 
   const startAutoDetection = () => {
-    if (!isCameraActive) return;
+    if (!isCameraActive || detectionMode !== 'idle') return;
     setAutoDetect(true);
     runDetectionLoop();
   };
@@ -68,14 +86,16 @@ export default function EmotionCamera({ onEmotionDetected }) {
   };
 
   const runDetectionLoop = async () => {
-    if (!autoDetect || !isCameraActive) return;
+    // Only run if auto-detect is on, camera is active, and we're in idle state
+    if (!autoDetect || !isCameraActive || detectionMode !== 'idle') return;
 
     await detectEmotionHandler();
 
-    if (autoDetect && isCameraActive) {
+    // Only schedule next detection if still in idle state
+    if (autoDetect && isCameraActive && detectionMode === 'idle') {
       detectionTimerRef.current = setTimeout(() => {
         runDetectionLoop();
-      }, 3000);
+      }, 4000); // 4 seconds between auto-detections
     }
   };
 
@@ -170,56 +190,79 @@ export default function EmotionCamera({ onEmotionDetected }) {
       return;
     }
 
-    // Prevent duplicate API calls
-    if (isDetectingRef.current) {
+    // Prevent parallel detection
+    if (isProcessingRef.current) {
+      console.log('Detection already in progress, skipping');
       return;
     }
 
-    isDetectingRef.current = true;
+    // Check throttling
+    if (shouldThrottleDetection()) {
+      console.log('Detection throttled, please wait');
+      return;
+    }
+
+    // Check face stability
+    if (!isFaceStable()) {
+      console.log('Face not stable, skipping detection');
+      setMessage('Face not stable. Please keep still.');
+      setTimeout(() => setMessage(null), 2000);
+      return;
+    }
+
+    // Set lock and state
+    isProcessingRef.current = true;
+    setDetectionMode('capturing');
     setIsAnalyzing(true);
     setError(null);
-    setMessage('Capturing image...');
+    setMessage('Capturing frame...');
     setEmotionResult(null);
-
-    // Fallback timer for slow responses
-    fallbackTimerRef.current = setTimeout(() => {
-      if (isAnalyzing) {
-        setMessage('Still analyzing, please wait...');
-      }
-    }, 3000);
 
     try {
       const blob = await captureFrame();
-      
       if (!blob) {
         throw new Error('Failed to capture frame');
       }
 
-      setMessage('Analyzing...');
+      setDetectionMode('analyzing');
+      setMessage('Analyzing emotion...');
+
+      // Fallback timer for slow responses
+      fallbackTimerRef.current = setTimeout(() => {
+        if (isAnalyzing) {
+          setMessage('Still analyzing, please wait...');
+        }
+      }, 3000);
+
       const result = await detectEmotion(blob);
-      
+
       // Clear fallback timer
       if (fallbackTimerRef.current) {
         clearTimeout(fallbackTimerRef.current);
       }
-      
+
       // Handle no_face with human feedback
       if (result.emotion === 'no_face') {
         setMessage('Face not detected. Please look at the camera');
+        setDetectionMode('idle');
         return;
       }
-      
+
       // Map to system emotion
       const mapped = mapEmotionToMood(result.emotion);
-      
+
       // Cache last emotion
       setLastEmotion(mapped);
-      
+      lastDetectionTimeRef.current = Date.now();
+
       // Smooth UI update
       setEmotionResult({
         emotion: mapped,
         confidence: result.confidence,
       });
+
+      setDetectionMode('result_ready');
+      setMessage('Analysis complete!');
 
       // Insert into Supabase
       if (user) {
@@ -230,9 +273,18 @@ export default function EmotionCamera({ onEmotionDetected }) {
       if (onEmotionDetected) {
         onEmotionDetected(mapped);
       }
+
+      // Cooldown before next detection
+      setDetectionMode('cooldown');
+      setTimeout(() => {
+        setDetectionMode('idle');
+        setMessage(null);
+      }, 2000);
+
     } catch (err) {
       console.error('Detection error:', err);
       setError('Emotion detection failed. Please try again.');
+      setDetectionMode('idle');
       // Show last known emotion as fallback
       if (lastEmotion) {
         setEmotionResult({
@@ -243,7 +295,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
       }
     } finally {
       setIsAnalyzing(false);
-      isDetectingRef.current = false;
+      isProcessingRef.current = false;
       if (fallbackTimerRef.current) {
         clearTimeout(fallbackTimerRef.current);
       }
@@ -477,7 +529,11 @@ export default function EmotionCamera({ onEmotionDetected }) {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center">
               <RefreshCw className="animate-spin text-teal-400 mx-auto mb-3" size={32} />
-              <p className="text-white text-sm sm:text-base">Analyzing emotion...</p>
+              <p className="text-white text-sm sm:text-base">
+                {detectionMode === 'capturing' ? 'Capturing frame...' : 
+                 detectionMode === 'analyzing' ? 'Analyzing emotion...' : 
+                 'Processing...'}
+              </p>
               <p className="text-gray-400 text-xs mt-2">AI analyzing your mood to personalize your productivity</p>
             </div>
           </div>
@@ -514,14 +570,17 @@ export default function EmotionCamera({ onEmotionDetected }) {
           <>
             <button
               onClick={detectEmotionHandler}
-              disabled={isAnalyzing || autoDetect || !faceAligned}
+              disabled={isAnalyzing || autoDetect || !faceAligned || detectionMode !== 'idle'}
               className="flex-1 py-3 sm:py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              title={!faceAligned ? "Align face properly for best accuracy" : ""}
+              title={!faceAligned ? "Align face properly for best accuracy" : detectionMode !== 'idle' ? "Detection in progress" : ""}
             >
               {isAnalyzing ? (
                 <>
                   <RefreshCw className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />
-                  Analyzing...
+                  {detectionMode === 'capturing' ? 'Capturing...' : 
+                   detectionMode === 'analyzing' ? 'Analyzing...' : 
+                   detectionMode === 'cooldown' ? 'Cooldown...' : 
+                   'Analyzing...'}
                 </>
               ) : (
                 <>
