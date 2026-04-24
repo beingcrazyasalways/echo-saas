@@ -14,6 +14,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const utteranceRef = useRef(null);
   const touchStartRef = useRef(null);
   const listeningTimeoutRef = useRef(null);
+  const isRecognitionActiveRef = useRef(false);
   
   const LISTENING_TIMEOUT = 5000; // 5 seconds max listening time
 
@@ -29,6 +30,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
       recognitionRef.current.onstart = () => {
         console.log('Speech recognition started');
+        isRecognitionActiveRef.current = true;
         setDebugInfo('Listening...');
       };
 
@@ -37,6 +39,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         console.log('Speech detected:', transcript);
         setDebugInfo(`Heard: "${transcript}"`);
         setTranscript(transcript);
+        isRecognitionActiveRef.current = false;
         
         // Clear timeout when speech is detected
         if (listeningTimeoutRef.current) {
@@ -55,6 +58,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setDebugInfo(`Error: ${event.error}`);
+        isRecognitionActiveRef.current = false;
         // Clear timeout on error
         if (listeningTimeoutRef.current) {
           clearTimeout(listeningTimeoutRef.current);
@@ -65,14 +69,16 @@ export default function VoiceMode({ currentEmotion, onClose }) {
           setVoiceState('idle');
           alert('Microphone permission denied. Please allow microphone access to use voice mode.');
         } else if (event.error === 'no-speech') {
-          handleNoSpeechDetected();
+          // Don't auto-trigger error on no-speech, just return to idle
+          setVoiceState('idle');
         } else {
-          handleNoSpeechDetected();
+          setVoiceState('idle');
         }
       };
 
       recognitionRef.current.onend = () => {
         console.log('Speech recognition ended');
+        isRecognitionActiveRef.current = false;
         setDebugInfo('Recognition ended');
         // Clear timeout on end
         if (listeningTimeoutRef.current) {
@@ -80,13 +86,10 @@ export default function VoiceMode({ currentEmotion, onClose }) {
           listeningTimeoutRef.current = null;
         }
         
-        // Recognition ended naturally
-        if (voiceState === 'listening' && !isExiting) {
-          // If we're still in listening state but no speech was captured, show error
-          if (!transcript || transcript.trim().length === 0) {
-            console.log('No speech captured, showing error');
-            handleNoSpeechDetected();
-          }
+        // Only trigger error if we were listening and got no transcript
+        if (voiceState === 'listening' && !isExiting && !transcript) {
+          console.log('Recognition ended without speech, returning to idle');
+          setVoiceState('idle');
         }
       };
     } else {
@@ -121,27 +124,45 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       return;
     }
 
+    if (isRecognitionActiveRef.current) {
+      console.log('Recognition already active, skipping');
+      return;
+    }
+
     try {
       setVoiceState('listening');
       setTranscript('');
-      recognitionRef.current.start();
-
-      // Set timeout to force stop if no speech detected
-      if (listeningTimeoutRef.current) {
-        clearTimeout(listeningTimeoutRef.current);
-      }
-      listeningTimeoutRef.current = setTimeout(() => {
-        if (voiceState === 'listening') {
-          console.log('Listening timeout reached, stopping recognition');
-          if (recognitionRef.current) {
-            recognitionRef.current.stop();
+      setDebugInfo('Starting listening...');
+      
+      // Small delay to ensure previous recognition is fully stopped
+      setTimeout(() => {
+        try {
+          recognitionRef.current.start();
+          
+          // Set timeout to force stop if no speech detected
+          if (listeningTimeoutRef.current) {
+            clearTimeout(listeningTimeoutRef.current);
           }
-          handleNoSpeechDetected();
+          listeningTimeoutRef.current = setTimeout(() => {
+            if (voiceState === 'listening' && isRecognitionActiveRef.current) {
+              console.log('Listening timeout reached, stopping recognition');
+              if (recognitionRef.current) {
+                recognitionRef.current.stop();
+              }
+              setVoiceState('idle');
+              setDebugInfo('Timeout - no speech detected');
+            }
+          }, LISTENING_TIMEOUT);
+        } catch (e) {
+          console.error('Failed to start recognition:', e);
+          setVoiceState('idle');
+          setDebugInfo('Failed to start recognition');
         }
-      }, LISTENING_TIMEOUT);
+      }, 200);
     } catch (e) {
       console.error('Failed to start recognition:', e);
       setVoiceState('idle');
+      setDebugInfo('Failed to start recognition');
     }
   };
 
@@ -205,6 +226,11 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     // Cancel any ongoing speech
     speechSynthRef.current.cancel();
 
+    // Unlock audio on mobile (user gesture)
+    if (speechSynthRef.current.speaking) {
+      speechSynthRef.current.cancel();
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.95; // Slightly slower for natural tone
     utterance.pitch = 1;
@@ -228,7 +254,11 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     };
 
     utteranceRef.current = utterance;
-    speechSynthRef.current.speak(utterance);
+    
+    // Small delay to ensure audio context is ready
+    setTimeout(() => {
+      speechSynthRef.current.speak(utterance);
+    }, 100);
   };
 
   const handleMicClick = () => {
@@ -240,6 +270,8 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         console.log('Error stopping recognition:', e);
       }
     }
+    isRecognitionActiveRef.current = false;
+    
     if (listeningTimeoutRef.current) {
       clearTimeout(listeningTimeoutRef.current);
       listeningTimeoutRef.current = null;
@@ -256,7 +288,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     // Start fresh listening
     setTimeout(() => {
       startListening();
-    }, 100);
+    }, 300);
   };
 
   const handleExit = () => {
