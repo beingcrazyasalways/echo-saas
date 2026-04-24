@@ -15,8 +15,11 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const touchStartRef = useRef(null);
   const lastSpeechTimeRef = useRef(null);
   const accumulatedTranscriptRef = useRef('');
+  const noSpeechTimeoutRef = useRef(null);
+  const listeningStartTimeRef = useRef(null);
   
   const SILENCE_THRESHOLD = 1500; // 1.5 seconds of silence before sending
+  const NO_SPEECH_TIMEOUT = 5000; // 5 seconds with no speech before error
 
   useEffect(() => {
     // Initialize Speech Recognition
@@ -45,6 +48,12 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         if (finalTranscript) {
           accumulatedTranscriptRef.current += finalTranscript;
           lastSpeechTimeRef.current = Date.now();
+          
+          // Clear no-speech timeout when speech is detected
+          if (noSpeechTimeoutRef.current) {
+            clearTimeout(noSpeechTimeoutRef.current);
+            noSpeechTimeoutRef.current = null;
+          }
         }
 
         // Display current state
@@ -107,6 +116,9 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
       }
+      if (noSpeechTimeoutRef.current) {
+        clearTimeout(noSpeechTimeoutRef.current);
+      }
       if (speechSynthRef.current) {
         speechSynthRef.current.cancel();
       }
@@ -123,9 +135,31 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       recognitionRef.current.start();
       setVoiceState('listening');
       setTranscript('');
+      accumulatedTranscriptRef.current = '';
+      listeningStartTimeRef.current = Date.now();
+
+      // Set no-speech timeout
+      if (noSpeechTimeoutRef.current) {
+        clearTimeout(noSpeechTimeoutRef.current);
+      }
+      noSpeechTimeoutRef.current = setTimeout(() => {
+        if (voiceState === 'listening' && accumulatedTranscriptRef.current.trim().length < 2) {
+          handleNoSpeechDetected();
+        }
+      }, NO_SPEECH_TIMEOUT);
     } catch (e) {
       console.error('Failed to start recognition:', e);
     }
+  };
+
+  const handleNoSpeechDetected = () => {
+    stopListening();
+    setVoiceState('speaking');
+    setTranscript('');
+    accumulatedTranscriptRef.current = '';
+    
+    const errorMessage = "Sorry, I didn't catch that. Could you please speak again?";
+    speak(errorMessage);
   };
 
   const stopListening = () => {
@@ -134,6 +168,10 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     }
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
+    }
+    if (noSpeechTimeoutRef.current) {
+      clearTimeout(noSpeechTimeoutRef.current);
+      noSpeechTimeoutRef.current = null;
     }
   };
 
@@ -167,7 +205,9 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       speak(aiResponse);
     } catch (error) {
       console.error('AI error:', error);
-      setVoiceState('idle');
+      setVoiceState('speaking');
+      const errorMessage = "Sorry, I'm having trouble connecting. Please try again.";
+      speak(errorMessage);
     }
   };
 
