@@ -2,7 +2,7 @@
 
 import { Sparkles, Lightbulb, Coffee, Target, BookOpen, Brain, Zap, ArrowRight } from 'lucide-react';
 
-export default function SuggestionCard({ suggestion, onAction }) {
+export default function SuggestionCard({ suggestion, onAction, loading = false }) {
   if (!suggestion) {
     return null;
   }
@@ -58,7 +58,7 @@ export default function SuggestionCard({ suggestion, onAction }) {
   const Icon = getIcon();
 
   return (
-    <div className={`backdrop-blur-xl bg-white/5 border ${getGradient()} rounded-2xl p-8 relative overflow-hidden transition-all duration-300 shadow-2xl`}>
+    <div className={`backdrop-blur-xl bg-white/5 border ${getGradient()} rounded-2xl p-8 relative overflow-hidden transition-all duration-300 shadow-2xl hover:scale-105`}>
       <div className="absolute top-0 right-0 p-4 opacity-20">
         <Sparkles size={64} className="text-teal-400" />
       </div>
@@ -87,10 +87,20 @@ export default function SuggestionCard({ suggestion, onAction }) {
 
         <button
           onClick={() => onAction(suggestion)}
-          className="mt-6 w-full py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
+          disabled={loading}
+          className="mt-6 w-full py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ArrowRight size={20} />
-          Take Action
+          {loading ? (
+            <>
+              <ArrowRight className="animate-spin" size={20} />
+              Adding...
+            </>
+          ) : (
+            <>
+              <ArrowRight size={20} />
+              Take Action
+            </>
+          )}
         </button>
       </div>
     </div>

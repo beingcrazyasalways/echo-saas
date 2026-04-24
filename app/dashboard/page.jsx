@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
@@ -491,16 +492,21 @@ export default function DashboardPage() {
   };
 
   const handleSuggestionAction = async (suggestion) => {
+    setSuggestionLoading(true);
     try {
       if (suggestion?.task) {
         await addTask(user.id, suggestion.task.title, suggestion.task.priority);
-        setMessage('Task added successfully');
+        setMessage('Task added ✔');
+        setTimeout(() => setMessage(''), 2000);
         loadTasks();
       }
       setSuggestion(null);
     } catch (err) {
       console.error(err);
       setMessage('Failed to add task');
+      setTimeout(() => setMessage(''), 2000);
+    } finally {
+      setSuggestionLoading(false);
     }
   };
 
@@ -696,6 +702,7 @@ export default function DashboardPage() {
               <SuggestionCard
                 suggestion={suggestion}
                 onAction={handleSuggestionAction}
+                loading={suggestionLoading}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
