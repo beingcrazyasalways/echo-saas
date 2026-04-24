@@ -7,6 +7,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const [voiceState, setVoiceState] = useState('idle'); // idle, listening, thinking, speaking
   const [transcript, setTranscript] = useState('');
   const [isExiting, setIsExiting] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('');
   
   const recognitionRef = useRef(null);
   const speechSynthRef = useRef(null);
@@ -26,8 +27,15 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       recognitionRef.current.lang = 'en-US';
       recognitionRef.current.maxAlternatives = 1;
 
+      recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started');
+        setDebugInfo('Listening...');
+      };
+
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
+        console.log('Speech detected:', transcript);
+        setDebugInfo(`Heard: "${transcript}"`);
         setTranscript(transcript);
         
         // Clear timeout when speech is detected
@@ -46,6 +54,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
+        setDebugInfo(`Error: ${event.error}`);
         // Clear timeout on error
         if (listeningTimeoutRef.current) {
           clearTimeout(listeningTimeoutRef.current);
@@ -63,6 +72,8 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       };
 
       recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended');
+        setDebugInfo('Recognition ended');
         // Clear timeout on end
         if (listeningTimeoutRef.current) {
           clearTimeout(listeningTimeoutRef.current);
@@ -73,15 +84,22 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         if (voiceState === 'listening' && !isExiting) {
           // If we're still in listening state but no speech was captured, show error
           if (!transcript || transcript.trim().length === 0) {
+            console.log('No speech captured, showing error');
             handleNoSpeechDetected();
           }
         }
       };
+    } else {
+      console.log('Speech recognition not supported');
+      setDebugInfo('Speech recognition not supported');
     }
 
     // Initialize Speech Synthesis
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       speechSynthRef.current = window.speechSynthesis;
+      console.log('Speech synthesis available');
+    } else {
+      console.log('Speech synthesis not supported');
     }
 
     return () => {
@@ -138,11 +156,13 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const handleSendToAI = async (text) => {
     setVoiceState('thinking');
     setTranscript('');
+    setDebugInfo('Sending to AI...');
 
     try {
       const stressLevel = localStorage.getItem('stressLevel') || null;
       const taskLoad = 0;
 
+      console.log('Sending to AI:', text);
       const response = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: {
@@ -157,12 +177,15 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       });
 
       const data = await response.json();
+      console.log('AI response:', data);
       const aiResponse = data.response || 'Sorry, I could not generate a response.';
+      setDebugInfo(`AI: "${aiResponse.substring(0, 50)}..."`);
 
       setVoiceState('speaking');
       speak(aiResponse);
     } catch (error) {
       console.error('AI error:', error);
+      setDebugInfo('AI connection error');
       setVoiceState('speaking');
       const errorMessage = "Sorry, I'm having trouble connecting. Please try again.";
       speak(errorMessage);
@@ -171,9 +194,13 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
   const speak = (text) => {
     if (!speechSynthRef.current) {
+      console.log('Speech synthesis not available');
       setVoiceState('idle');
       return;
     }
+
+    console.log('Speaking:', text);
+    setDebugInfo('Speaking...');
 
     // Cancel any ongoing speech
     speechSynthRef.current.cancel();
@@ -183,12 +210,21 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     utterance.pitch = 1;
     utterance.volume = 1;
 
+    utterance.onstart = () => {
+      console.log('Speech synthesis started');
+      setDebugInfo('Speaking...');
+    };
+
     utterance.onend = () => {
+      console.log('Speech synthesis ended');
+      setDebugInfo('Speech ended, restarting listening');
       setVoiceState('listening');
       startListening();
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (e) => {
+      console.error('Speech synthesis error:', e);
+      setDebugInfo('Speech error, restarting listening');
       setVoiceState('listening');
       startListening();
     };
@@ -294,6 +330,9 @@ export default function VoiceMode({ currentEmotion, onClose }) {
           </p>
           {transcript && (
             <p className="text-white text-lg font-medium">{transcript}</p>
+          )}
+          {debugInfo && (
+            <p className="text-xs text-gray-500 mt-2">{debugInfo}</p>
           )}
         </div>
 
