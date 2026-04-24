@@ -18,6 +18,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const [message, setMessage] = useState(null);
   const [lastEmotion, setLastEmotion] = useState(null);
   const [faceAligned, setFaceAligned] = useState(false);
+  const [faceInFrame, setFaceInFrame] = useState(false);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -103,7 +104,20 @@ export default function EmotionCamera({ onEmotionDetected }) {
         // Simulate face alignment after 2 seconds
         setTimeout(() => {
           setFaceAligned(true);
+          // Simulate face in frame detection with slight fluctuation
+          setFaceInFrame(true);
         }, 2000);
+
+        // Simulate real-time face tracking fluctuations
+        const faceTrackingInterval = setInterval(() => {
+          if (isCameraActive) {
+            // 90% chance face is in frame, 10% chance it moved
+            setFaceInFrame(Math.random() > 0.1);
+          }
+        }, 3000);
+
+        // Store interval ref for cleanup
+        streamRef.current.faceTrackingInterval = faceTrackingInterval;
       } else {
         setError('Camera reference not found. Please refresh the page.');
       }
@@ -123,10 +137,14 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
+      if (streamRef.current.faceTrackingInterval) {
+        clearInterval(streamRef.current.faceTrackingInterval);
+      }
       streamRef.current = null;
     }
     setIsCameraActive(false);
     setFaceAligned(false);
+    setFaceInFrame(false);
   };
 
   const captureFrame = () => {
@@ -407,33 +425,46 @@ export default function EmotionCamera({ onEmotionDetected }) {
             
             {/* Face Frame Overlay */}
             {isCameraActive && !isAnalyzing && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Dark overlay mask */}
-                <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {/* Radial gradient vignette - dark edges, clear center */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,transparent_30%,rgba(0,0,0,0.6)_100%)]" />
                 
                 {/* Face frame */}
-                <div className={`relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 border-2 rounded-full ${
-                  faceAligned 
-                    ? 'border-green-400 shadow-[0_0_30px_rgba(74,222,128,0.5)]' 
-                    : 'border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.5)] animate-pulse'
-                } backdrop-blur-sm bg-black/20 flex items-center justify-center`}>
+                <div className={`relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 border-2 rounded-full transition-all duration-300 ${
+                  faceInFrame 
+                    ? 'border-green-400 shadow-[0_0_40px_rgba(74,222,128,0.4)]' 
+                    : 'border-cyan-400 shadow-[0_0_40px_rgba(34,211,238,0.4)] animate-pulse'
+                } backdrop-blur-none bg-transparent flex items-center justify-center`}>
                   {/* Corner guides */}
-                  <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-cyan-400 rounded-tl-lg" />
-                  <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-cyan-400 rounded-tr-lg" />
-                  <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-cyan-400 rounded-bl-lg" />
-                  <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-cyan-400 rounded-br-lg" />
+                  <div className={`absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 rounded-tl-lg transition-all duration-300 ${
+                    faceInFrame ? 'border-green-400' : 'border-cyan-400'
+                  }`} />
+                  <div className={`absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 rounded-tr-lg transition-all duration-300 ${
+                    faceInFrame ? 'border-green-400' : 'border-cyan-400'
+                  }`} />
+                  <div className={`absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 rounded-bl-lg transition-all duration-300 ${
+                    faceInFrame ? 'border-green-400' : 'border-cyan-400'
+                  }`} />
+                  <div className={`absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 rounded-br-lg transition-all duration-300 ${
+                    faceInFrame ? 'border-green-400' : 'border-cyan-400'
+                  }`} />
                   
-                  {/* Helper text */}
-                  <div className="text-center px-4">
-                    <p className={`text-xs sm:text-sm font-medium ${
-                      faceAligned ? 'text-green-400' : 'text-cyan-400'
-                    }`}>
-                      {faceAligned ? '✓ Good position' : 'Position your face inside the frame'}
-                    </p>
-                    {!faceAligned && (
-                      <p className="text-xs text-gray-400 mt-1">Move closer to center</p>
-                    )}
+                  {/* Scanning line animation */}
+                  <div className="absolute inset-0 overflow-hidden rounded-full">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scan" />
                   </div>
+                </div>
+
+                {/* Helper text below frame */}
+                <div className="absolute bottom-16 sm:bottom-20 left-0 right-0 text-center px-4">
+                  <p className={`text-sm sm:text-base font-medium transition-all duration-300 ${
+                    faceInFrame ? 'text-green-400' : 'text-cyan-400'
+                  }`}>
+                    {faceInFrame ? '✓ Good Position' : 'Align Face Inside Frame'}
+                  </p>
+                  {!faceInFrame && (
+                    <p className="text-xs text-gray-400 mt-1 transition-opacity duration-300">Move closer to center</p>
+                  )}
                 </div>
               </div>
             )}
