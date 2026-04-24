@@ -381,19 +381,20 @@ export default function EmotionCamera({ onEmotionDetected }) {
 
   const mapEmotionToMood = (emotion) => {
     // Map backend emotions to allowed mood values in schema
+    // Preserve more distinct emotions for better variety
     const moodMap = {
       'stressed': 'stressed',
-      'angry': 'stressed',
-      'fearful': 'stressed',
-      'disgusted': 'stressed',
-      'sad': 'stressed',
+      'angry': 'angry',
+      'fearful': 'fearful',
+      'disgusted': 'disgusted',
+      'sad': 'sad',
       'calm': 'calm',
-      'neutral': 'calm',
-      'happy': 'calm',
+      'neutral': 'neutral',
+      'happy': 'happy',
       'focused': 'focused',
-      'surprised': 'calm',
+      'surprised': 'surprised',
     };
-    return moodMap[emotion] || emotion || 'calm';
+    return moodMap[emotion] || emotion || 'neutral';
   };
 
   const mapEmotionToStress = (emotion) => {
