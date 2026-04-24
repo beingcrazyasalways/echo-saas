@@ -13,8 +13,10 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const utteranceRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const touchStartRef = useRef(null);
+  const lastSpeechTimeRef = useRef(null);
+  const accumulatedTranscriptRef = useRef('');
   
-  const SILENCE_THRESHOLD = 2000; // 2 seconds of silence before sending
+  const SILENCE_THRESHOLD = 1500; // 1.5 seconds of silence before sending
 
   useEffect(() => {
     // Initialize Speech Recognition
@@ -24,6 +26,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.maxAlternatives = 1;
 
       recognitionRef.current.onresult = (event) => {
         let finalTranscript = '';
@@ -32,23 +35,33 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcript;
+            finalTranscript += transcript + ' ';
           } else {
             interimTranscript += transcript;
           }
         }
 
-        setTranscript(finalTranscript || interimTranscript);
+        // Update accumulated transcript
+        if (finalTranscript) {
+          accumulatedTranscriptRef.current += finalTranscript;
+          lastSpeechTimeRef.current = Date.now();
+        }
 
-        // Reset silence timer on speech
+        // Display current state
+        setTranscript(accumulatedTranscriptRef.current + interimTranscript);
+
+        // Reset and restart silence timer on any speech
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
         }
 
-        // If we have final transcript, start silence timer
-        if (finalTranscript) {
+        // Start silence timer if we have content
+        if (accumulatedTranscriptRef.current || interimTranscript) {
           silenceTimerRef.current = setTimeout(() => {
-            handleSendToAI(finalTranscript);
+            const finalText = accumulatedTranscriptRef.current.trim();
+            if (finalText.length > 2) { // Only send if we have meaningful content
+              handleSendToAI(finalText);
+            }
           }, SILENCE_THRESHOLD);
         }
       };
@@ -58,6 +71,15 @@ export default function VoiceMode({ currentEmotion, onClose }) {
         if (event.error === 'not-allowed') {
           setVoiceState('idle');
           alert('Microphone permission denied. Please allow microphone access to use voice mode.');
+        } else if (event.error === 'no-speech') {
+          // No speech detected, just restart
+          if (voiceState === 'listening' && !isExiting) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.error('Failed to restart recognition:', e);
+            }
+          }
         }
       };
 
@@ -119,6 +141,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     stopListening();
     setVoiceState('thinking');
     setTranscript('');
+    accumulatedTranscriptRef.current = ''; // Reset accumulated transcript
 
     try {
       const stressLevel = localStorage.getItem('stressLevel') || null;

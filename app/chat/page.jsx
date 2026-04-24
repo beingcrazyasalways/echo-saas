@@ -71,6 +71,7 @@ export default function ChatPage() {
                 <ChatUI 
                   currentEmotion={currentEmotion}
                   onEmotionChange={setCurrentEmotion}
+                  onOpenVoiceMode={() => setVoiceModeOpen(true)}
                 />
               </div>
             </div>

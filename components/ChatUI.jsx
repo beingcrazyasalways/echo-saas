@@ -1,52 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect, memo } from 'react';
-import { Send, Sparkles, X, Mic, Volume2, VolumeX } from 'lucide-react';
+import { Send, Sparkles, X, Volume2, VolumeX } from 'lucide-react';
 
-function ChatUI({ currentEmotion, onEmotionChange, onClose }) {
+function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   
-  const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    // Initialize Speech Recognition
-    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
-      recognitionRef.current = new window.webkitSpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -96,21 +60,6 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose }) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVoiceInput = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
-      setIsListening(true);
     }
   };
 
@@ -219,24 +168,26 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose }) {
       {/* Input Area */}
       <form onSubmit={handleSend} className="p-4 border-t border-white/10 bg-white/5">
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleVoiceInput}
-            disabled={loading}
-            className={`p-3 rounded-xl transition-colors ${
-              isListening 
-                ? 'bg-red-500/20 text-red-400 animate-pulse' 
-                : 'bg-white/10 text-gray-400 hover:bg-white/20'
-            }`}
-            title={isListening ? 'Listening...' : 'Voice input'}
-          >
-            <Mic size={20} />
-          </button>
+          {onOpenVoiceMode && (
+            <button
+              type="button"
+              onClick={onOpenVoiceMode}
+              className="p-3 rounded-xl bg-white/10 text-gray-400 hover:bg-white/20 transition-colors"
+              title="Voice Mode"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+          )}
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type or speak your message..."
+            placeholder="Type your message..."
             className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-400/50 transition-colors"
             disabled={loading}
           />
