@@ -129,6 +129,13 @@ export default function VoiceMode({ currentEmotion, onClose }) {
       return;
     }
 
+    // Unlock audio context on mobile with dummy speech
+    if (speechSynthRef.current) {
+      const dummyUtterance = new SpeechSynthesisUtterance('');
+      speechSynthRef.current.speak(dummyUtterance);
+      speechSynthRef.current.cancel();
+    }
+
     try {
       setVoiceState('listening');
       setTranscript('');
@@ -226,15 +233,30 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     // Cancel any ongoing speech
     speechSynthRef.current.cancel();
 
-    // Unlock audio on mobile (user gesture)
-    if (speechSynthRef.current.speaking) {
-      speechSynthRef.current.cancel();
+    // Get available voices and select a mobile-compatible one
+    const voices = speechSynthRef.current.getVoices();
+    let selectedVoice = null;
+    
+    // Try to find a mobile-friendly voice
+    selectedVoice = voices.find(voice => 
+      voice.lang.includes('en') && 
+      (voice.name.includes('Google') || voice.name.includes('Samantha') || voice.name.includes('Female'))
+    );
+    
+    // Fallback to any English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => voice.lang.includes('en'));
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.95; // Slightly slower for natural tone
     utterance.pitch = 1;
     utterance.volume = 1;
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      console.log('Using voice:', selectedVoice.name);
+    }
 
     utterance.onstart = () => {
       console.log('Speech synthesis started');
@@ -244,21 +266,19 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     utterance.onend = () => {
       console.log('Speech synthesis ended');
       setDebugInfo('Speech ended');
-      setVoiceState('idle'); // Return to idle instead of auto-restarting
+      setVoiceState('idle');
     };
 
     utterance.onerror = (e) => {
       console.error('Speech synthesis error:', e);
       setDebugInfo('Speech error');
-      setVoiceState('idle'); // Return to idle on error
+      setVoiceState('idle');
     };
 
     utteranceRef.current = utterance;
     
-    // Small delay to ensure audio context is ready
-    setTimeout(() => {
-      speechSynthRef.current.speak(utterance);
-    }, 100);
+    // Speak immediately (user gesture already occurred)
+    speechSynthRef.current.speak(utterance);
   };
 
   const handleMicClick = () => {
