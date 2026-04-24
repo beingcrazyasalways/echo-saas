@@ -15,6 +15,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const [user, setUser] = useState(null);
   const [autoDetect, setAutoDetect] = useState(false);
   const [message, setMessage] = useState(null);
+  const [lastEmotion, setLastEmotion] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -22,9 +23,12 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const fileInputRef = useRef(null);
   const detectionTimerRef = useRef(null);
   const isDetectingRef = useRef(false);
+  const fallbackTimerRef = useRef(null);
 
   useEffect(() => {
     loadUser();
+    // Pre-warm API
+    fetch('https://echo-saas.onrender.com').catch(() => {});
   }, []);
 
   const loadUser = async () => {
@@ -40,6 +44,9 @@ export default function EmotionCamera({ onEmotionDetected }) {
     return () => {
       stopCamera();
       stopAutoDetection();
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
     };
   }, []);
 
@@ -109,21 +116,19 @@ export default function EmotionCamera({ onEmotionDetected }) {
   };
 
   const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return null;
-    
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
     return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+
       canvas.toBlob((blob) => {
         resolve(blob);
-      }, 'image/jpeg', 0.8);
+      }, 'image/jpeg', 0.5);
     });
   };
 
@@ -141,8 +146,15 @@ export default function EmotionCamera({ onEmotionDetected }) {
     isDetectingRef.current = true;
     setIsAnalyzing(true);
     setError(null);
-    setMessage(null);
+    setMessage('Capturing image...');
     setEmotionResult(null);
+
+    // Fallback timer for slow responses
+    fallbackTimerRef.current = setTimeout(() => {
+      if (isAnalyzing) {
+        setMessage('Still analyzing, please wait...');
+      }
+    }, 3000);
 
     try {
       const blob = await captureFrame();
@@ -151,7 +163,13 @@ export default function EmotionCamera({ onEmotionDetected }) {
         throw new Error('Failed to capture frame');
       }
 
+      setMessage('Analyzing...');
       const result = await detectEmotion(blob);
+      
+      // Clear fallback timer
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
       
       // Handle no_face with human feedback
       if (result.emotion === 'no_face') {
@@ -161,6 +179,9 @@ export default function EmotionCamera({ onEmotionDetected }) {
       
       // Map to system emotion
       const mapped = mapEmotionToMood(result.emotion);
+      
+      // Cache last emotion
+      setLastEmotion(mapped);
       
       // Smooth UI update
       setEmotionResult({
@@ -180,9 +201,20 @@ export default function EmotionCamera({ onEmotionDetected }) {
     } catch (err) {
       console.error('Detection error:', err);
       setError('Emotion detection failed. Please try again.');
+      // Show last known emotion as fallback
+      if (lastEmotion) {
+        setEmotionResult({
+          emotion: lastEmotion,
+          confidence: 0.5,
+        });
+        setMessage(`Using last detected emotion: ${lastEmotion}`);
+      }
     } finally {
       setIsAnalyzing(false);
       isDetectingRef.current = false;
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
     }
   };
 
@@ -199,11 +231,24 @@ export default function EmotionCamera({ onEmotionDetected }) {
 
     setIsAnalyzing(true);
     setError(null);
-    setMessage(null);
+    setMessage('Capturing image...');
     setEmotionResult(null);
 
+    // Fallback timer for slow responses
+    fallbackTimerRef.current = setTimeout(() => {
+      if (isAnalyzing) {
+        setMessage('Still analyzing, please wait...');
+      }
+    }, 3000);
+
     try {
+      setMessage('Analyzing...');
       const result = await detectEmotion(file);
+      
+      // Clear fallback timer
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
       
       // Handle no_face with human feedback
       if (result.emotion === 'no_face') {
@@ -213,6 +258,9 @@ export default function EmotionCamera({ onEmotionDetected }) {
       
       // Map to system emotion
       const mapped = mapEmotionToMood(result.emotion);
+      
+      // Cache last emotion
+      setLastEmotion(mapped);
       
       setEmotionResult({
         emotion: mapped,
@@ -231,8 +279,19 @@ export default function EmotionCamera({ onEmotionDetected }) {
     } catch (err) {
       console.error('Detection error:', err);
       setError('Emotion detection failed. Please try again.');
+      // Show last known emotion as fallback
+      if (lastEmotion) {
+        setEmotionResult({
+          emotion: lastEmotion,
+          confidence: 0.5,
+        });
+        setMessage(`Using last detected emotion: ${lastEmotion}`);
+      }
     } finally {
       setIsAnalyzing(false);
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
     }
   };
 
