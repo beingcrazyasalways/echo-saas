@@ -86,7 +86,7 @@ export default function SuggestionCard({ suggestion, onAction }) {
         )}
 
         <button
-          onClick={onAction}
+          onClick={() => onAction(suggestion)}
           className="mt-6 w-full py-4 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-xl text-white font-semibold hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
         >
           <ArrowRight size={20} />

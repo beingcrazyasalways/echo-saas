@@ -490,12 +490,18 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSuggestionAction = () => {
-    console.log('Suggestion clicked');
-    if (suggestion?.task) {
-      handleAIAddTask(suggestion.task.title, suggestion.task.priority);
+  const handleSuggestionAction = async (suggestion) => {
+    try {
+      if (suggestion?.task) {
+        await addTask(user.id, suggestion.task.title, suggestion.task.priority);
+        setMessage('Task added successfully');
+        loadTasks();
+      }
+      setSuggestion(null);
+    } catch (err) {
+      console.error(err);
+      setMessage('Failed to add task');
     }
-    setSuggestion(null);
   };
 
   const getEmotionGlow = (emotion) => {
