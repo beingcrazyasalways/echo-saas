@@ -6,7 +6,7 @@ import { detectEmotion } from '@/lib/emotionApi';
 import { supabase } from '@/lib/supabaseClient';
 import { getCurrentUser } from '@/lib/supabaseClient';
 
-export default function EmotionCamera() {
+export default function EmotionCamera({ onEmotionDetected }) {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [emotionResult, setEmotionResult] = useState(null);
@@ -159,15 +159,23 @@ export default function EmotionCamera() {
         return;
       }
       
+      // Map to system emotion
+      const mapped = mapEmotionToMood(result.emotion);
+      
       // Smooth UI update
       setEmotionResult({
-        emotion: result.emotion,
+        emotion: mapped,
         confidence: result.confidence,
       });
 
       // Insert into Supabase
       if (user) {
         await insertEmotion(result);
+      }
+
+      // Update dashboard live
+      if (onEmotionDetected) {
+        onEmotionDetected(mapped);
       }
     } catch (err) {
       console.error('Detection error:', err);
@@ -203,14 +211,22 @@ export default function EmotionCamera() {
         return;
       }
       
+      // Map to system emotion
+      const mapped = mapEmotionToMood(result.emotion);
+      
       setEmotionResult({
-        emotion: result.emotion,
+        emotion: mapped,
         confidence: result.confidence,
       });
 
       // Insert into Supabase
       if (user) {
         await insertEmotion(result);
+      }
+
+      // Update dashboard live
+      if (onEmotionDetected) {
+        onEmotionDetected(mapped);
       }
     } catch (err) {
       console.error('Detection error:', err);

@@ -205,12 +205,24 @@ export default function EmotionPage() {
     });
   };
 
+  const mapEmotion = (emotion) => {
+    if (emotion === 'happy') return 'calm';
+    if (emotion === 'sad') return 'stressed';
+    if (emotion === 'neutral') return 'focused';
+    if (emotion === 'angry') return 'stressed';
+    if (emotion === 'fearful') return 'stressed';
+    if (emotion === 'disgusted') return 'stressed';
+    if (emotion === 'surprised') return 'calm';
+    if (emotion === 'no_face') return 'calm';
+    return 'calm';
+  };
+
   const analyzeVideoBlob = async (blob) => {
     try {
       const formData = new FormData();
-      formData.append('video', blob, 'emotion-analysis.webm');
+      formData.append('file', blob, 'emotion-analysis.jpg');
 
-      const response = await fetch('/api/emotion/analyze', {
+      const response = await fetch('https://echo-saas.onrender.com/detect-emotion', {
         method: 'POST',
         body: formData,
       });
@@ -219,7 +231,14 @@ export default function EmotionPage() {
         throw new Error('Video analysis failed');
       }
 
-      const result = await response.json();
+      const data = await response.json();
+      const mapped = mapEmotion(data.emotion);
+      const result = {
+        emotion: mapped,
+        confidence: data.confidence,
+        stress_score: mapped === 'stressed' ? 80 : mapped === 'focused' ? 40 : 30,
+      };
+      
       setEmotionResult(result);
       
       if (user && result) {
@@ -227,6 +246,7 @@ export default function EmotionPage() {
           await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
           
           localStorage.setItem('currentEmotion', result.emotion);
+          setCurrentEmotion(result.emotion);
           
           await fetch('/api/ai', {
             method: 'POST',
@@ -281,7 +301,7 @@ export default function EmotionPage() {
 
   const analyzeEmotion = async (imageData, updateState = true) => {
     try {
-      const response = await fetch('/api/emotion/analyze', {
+      const response = await fetch('https://echo-saas.onrender.com/detect-emotion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imageData }),
@@ -291,7 +311,16 @@ export default function EmotionPage() {
         throw new Error('Analysis failed');
       }
 
-      const result = await response.json();
+      const data = await response.json();
+      
+      // Map backend emotion to system emotion
+      const mapped = mapEmotion(data.emotion);
+      const result = {
+        emotion: mapped,
+        confidence: data.confidence,
+        stress_score: mapped === 'stressed' ? 80 : mapped === 'focused' ? 40 : 30,
+      };
+      
       if (updateState) {
         setEmotionResult(result);
         
@@ -300,6 +329,7 @@ export default function EmotionPage() {
             await logEmotionFromDetection(user.id, result.emotion, result.confidence, result.stress_score);
             
             localStorage.setItem('currentEmotion', result.emotion);
+            setCurrentEmotion(result.emotion);
             
             await fetch('/api/ai', {
               method: 'POST',
