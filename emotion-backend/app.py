@@ -18,10 +18,11 @@ app.add_middleware(
 
 
 @app.post("/detect-emotion")
-async def detect_emotion():
+async def detect_emotion(file: UploadFile = File(...)):
     """
     Stub endpoint for testing - returns fixed emotion response.
     """
+    print("API HIT")
     return {"emotion": "calm", "confidence": 0.8}
 
 
