@@ -18,52 +18,11 @@ app.add_middleware(
 
 
 @app.post("/detect-emotion")
-async def detect_emotion(file: UploadFile = File(...)):
+async def detect_emotion():
     """
-    Detect emotion from uploaded image file.
-    
-    Args:
-        file: Image file (jpg, png, etc.)
-        
-    Returns:
-        JSON with emotion label and confidence
+    Stub endpoint for testing - returns fixed emotion response.
     """
-    print("Request received")
-    
-    # Validate input
-    if file is None:
-        return {"error": "No file provided"}
-    
-    try:
-        print("Loading model...")
-        
-        # Read file content
-        contents = await file.read()
-        
-        # Convert to numpy array
-        nparr = np.frombuffer(contents, np.uint8)
-        
-        # Decode image
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        if image is None:
-            raise HTTPException(status_code=400, detail="Invalid image file")
-        
-        # Resize image to reduce processing load before inference
-        image = cv2.resize(image, (48, 48))
-        
-        print("Running prediction...")
-        
-        # Predict emotion
-        emotion, confidence = predict_emotion(image)
-        
-        return {
-            "emotion": emotion,
-            "confidence": confidence
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+    return {"emotion": "calm", "confidence": 0.8}
 
 
 @app.get("/")
