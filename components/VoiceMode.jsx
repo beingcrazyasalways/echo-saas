@@ -8,6 +8,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
   const [transcript, setTranscript] = useState('');
   const [isExiting, setIsExiting] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
   
   const recognitionRef = useRef(null);
   const speechSynthRef = useRef(null);
@@ -139,6 +140,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     try {
       setVoiceState('listening');
       setTranscript('');
+      setAiResponse('');
       setDebugInfo('Starting listening...');
       
       // Small delay to ensure previous recognition is fully stopped
@@ -206,23 +208,25 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
       const data = await response.json();
       console.log('AI response:', data);
-      const aiResponse = data.response || 'Sorry, I could not generate a response.';
-      setDebugInfo(`AI: "${aiResponse.substring(0, 50)}..."`);
+      const aiResponseText = data.response || 'Sorry, I could not generate a response.';
+      setAiResponse(aiResponseText);
+      setDebugInfo(`AI: "${aiResponseText.substring(0, 50)}..."`);
 
       setVoiceState('speaking');
-      speak(aiResponse);
+      speak(aiResponseText);
     } catch (error) {
       console.error('AI error:', error);
       setDebugInfo('AI connection error');
-      setVoiceState('speaking');
+      setVoiceState('idle');
       const errorMessage = "Sorry, I'm having trouble connecting. Please try again.";
-      speak(errorMessage);
+      setAiResponse(errorMessage);
     }
   };
 
   const speak = (text) => {
     if (!speechSynthRef.current) {
       console.log('Speech synthesis not available');
+      setDebugInfo('Speech not available - showing text');
       setVoiceState('idle');
       return;
     }
@@ -271,14 +275,21 @@ export default function VoiceMode({ currentEmotion, onClose }) {
 
     utterance.onerror = (e) => {
       console.error('Speech synthesis error:', e);
-      setDebugInfo('Speech error');
+      setDebugInfo('Speech error - showing text');
       setVoiceState('idle');
+      // Text is already displayed, no need to do anything else
     };
 
     utteranceRef.current = utterance;
     
     // Speak immediately (user gesture already occurred)
-    speechSynthRef.current.speak(utterance);
+    try {
+      speechSynthRef.current.speak(utterance);
+    } catch (e) {
+      console.error('Failed to speak:', e);
+      setDebugInfo('Speech failed - showing text');
+      setVoiceState('idle');
+    }
   };
 
   const handleMicClick = () => {
@@ -303,6 +314,7 @@ export default function VoiceMode({ currentEmotion, onClose }) {
     // Reset state
     setVoiceState('idle');
     setTranscript('');
+    setAiResponse('');
     setDebugInfo('');
     
     // Start fresh listening
@@ -381,6 +393,11 @@ export default function VoiceMode({ currentEmotion, onClose }) {
           </p>
           {transcript && (
             <p className="text-white text-lg font-medium">{transcript}</p>
+          )}
+          {aiResponse && (
+            <div className="mt-4 p-4 bg-white/10 rounded-lg max-w-md">
+              <p className="text-white text-sm">{aiResponse}</p>
+            </div>
           )}
           {debugInfo && (
             <div className="mt-4 p-3 bg-white/10 rounded-lg">
