@@ -6,9 +6,10 @@ const EMOTION_API_BASE_URL = process.env.EMOTION_API_BASE_URL || 'https://echo-s
 
 function createFallbackEmotion() {
   return {
-    emotion: 'calm',
-    confidence: 0.5,
-    stress_score: 30,
+    emotion: 'error',
+    confidence: 0.0,
+    stress_score: 0,
+    error: 'Emotion detection service error',
     fallback: true,
   };
 }
