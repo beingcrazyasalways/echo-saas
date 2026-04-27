@@ -27,7 +27,14 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
+  const handleMenuClick = (path) => {
+    console.log('[DEBUG] Menu item clicked:', path);
+    router.push(path);
+    if (onClose) onClose();
+  };
+
   const handleLogout = async () => {
+    console.log('[DEBUG] Logout clicked');
     const { signOut } = await import('@/lib/supabaseClient');
     await signOut();
     router.push('/login');
@@ -43,7 +50,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
           onClick={onClose}
         />
       )}
-      <div className={`w-64 sm:w-72 h-screen backdrop-blur-xl bg-slate-900/50 border-r border-white/10 flex flex-col lg:static lg:left-auto lg:inset-auto fixed left-0 top-0 z-60 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} pointer-events-auto relative`}>
+      <div className={`w-64 sm:w-72 h-screen backdrop-blur-xl bg-slate-900/50 border-r border-white/10 flex flex-col fixed left-0 top-0 lg:static lg:left-auto lg:inset-auto z-60 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} pointer-events-auto`}>
         <div className="p-4 sm:p-6 lg:p-8 border-b border-white/10">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-400 to-indigo-400 bg-clip-text text-transparent">
             E.C.H.O
@@ -63,10 +70,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
                     ? 'bg-gradient-to-r from-teal-500/20 to-indigo-500/20 text-white border border-teal-400/30'
                     : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
-                onClick={() => {
-                  router.push(item.path);
-                  if (onClose) onClose();
-                }}
+                onClick={() => handleMenuClick(item.path)}
               >
                 <Icon className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 <span className="font-medium text-sm sm:text-base">{item.label}</span>
