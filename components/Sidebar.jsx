@@ -43,7 +43,7 @@ export default function Sidebar({ currentEmotion, isOpen, onClose }) {
           onClick={onClose}
         />
       )}
-      <div className={`w-64 sm:w-72 h-screen backdrop-blur-xl bg-slate-900/50 border-r border-white/10 flex flex-col lg:static lg:left-auto lg:inset-auto fixed left-0 top-0 z-60 lg:z-auto transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} pointer-events-auto`}>
+      <div className={`w-64 sm:w-72 h-screen backdrop-blur-xl bg-slate-900/50 border-r border-white/10 flex flex-col lg:static lg:left-auto lg:inset-auto fixed left-0 top-0 z-60 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} pointer-events-auto relative`}>
         <div className="p-4 sm:p-6 lg:p-8 border-b border-white/10">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-400 to-indigo-400 bg-clip-text text-transparent">
             E.C.H.O

@@ -596,12 +596,12 @@ export default function DashboardPage() {
 
         <div className="flex-1 w-full min-w-0 overflow-x-hidden">
         {taskFeedback && (
-          <div className={`fixed top-24 right-8 px-4 py-3 rounded-lg shadow-lg z-50 ${
+          <div className={`fixed top-24 right-8 px-4 py-3 rounded-lg shadow-lg z-30 pointer-events-none ${
             taskFeedback.type === 'success' 
               ? 'bg-emerald-500/90 border border-emerald-400/30 text-white' 
               : 'bg-red-500/90 border border-red-400/30 text-white'
           }`}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pointer-events-auto">
               {taskFeedback.type === 'success' ? (
                 <span className="text-lg">✓</span>
               ) : (
