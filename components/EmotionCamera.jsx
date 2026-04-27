@@ -6,6 +6,7 @@ import { detectEmotion } from '@/lib/emotionApi';
 import { supabase } from '@/lib/supabaseClient';
 import { getCurrentUser } from '@/lib/supabaseClient';
 import { getEmotionConfig, getEmotionDisplayName, isCustomEmotion } from '@/lib/emotionConfig';
+import { mapEmotionToStressScore, toStoredEmotion } from '@/lib/emotionMapping';
 
 export default function EmotionCamera({ onEmotionDetected }) {
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -28,13 +29,10 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const detectionTimerRef = useRef(null);
   const isProcessingRef = useRef(false); // Lock to prevent parallel detection
   const fallbackTimerRef = useRef(null);
-  const lastFacePositionRef = useRef(null); // Track face stability
   const lastDetectionTimeRef = useRef(0); // Track detection throttling
 
   useEffect(() => {
     loadUser();
-    // Pre-warm API
-    fetch('https://echo-saas.onrender.com').catch(() => {});
   }, []);
 
   const loadUser = async () => {
@@ -56,9 +54,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
 
   // Helper to check face stability (simulated)
   const isFaceStable = () => {
-    // In a real implementation, this would compare face bounding boxes
-    // For now, we use the faceInFrame state as a proxy
-    return faceInFrame;
+    return isCameraActive;
   };
 
   useEffect(() => {
@@ -118,26 +114,10 @@ export default function EmotionCamera({ onEmotionDetected }) {
         await videoRef.current.play();
         setIsCameraActive(true);
         setError(null);
+        setFaceAligned(true);
+        setFaceInFrame(false);
         setMessage('Camera started successfully');
         setTimeout(() => setMessage(null), 2000);
-        
-        // Simulate face alignment after 2 seconds
-        setTimeout(() => {
-          setFaceAligned(true);
-          // Simulate face in frame detection with slight fluctuation
-          setFaceInFrame(true);
-        }, 2000);
-
-        // Simulate real-time face tracking fluctuations
-        const faceTrackingInterval = setInterval(() => {
-          if (isCameraActive) {
-            // 90% chance face is in frame, 10% chance it moved
-            setFaceInFrame(Math.random() > 0.1);
-          }
-        }, 3000);
-
-        // Store interval ref for cleanup
-        streamRef.current.faceTrackingInterval = faceTrackingInterval;
       } else {
         setError('Camera reference not found. Please refresh the page.');
       }
@@ -157,9 +137,6 @@ export default function EmotionCamera({ onEmotionDetected }) {
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
-      if (streamRef.current.faceTrackingInterval) {
-        clearInterval(streamRef.current.faceTrackingInterval);
-      }
       streamRef.current = null;
     }
     setIsCameraActive(false);
@@ -244,6 +221,13 @@ export default function EmotionCamera({ onEmotionDetected }) {
       // Handle no_face with human feedback
       if (result.emotion === 'no_face') {
         setMessage('Face not detected. Please look at the camera');
+        setDetectionMode('idle');
+        return;
+      }
+
+      // Check if this is a fallback response
+      if (result.fallback) {
+        setError('Emotion detection service unavailable. Please try again later.');
         setDetectionMode('idle');
         return;
       }
@@ -334,6 +318,13 @@ export default function EmotionCamera({ onEmotionDetected }) {
         clearTimeout(fallbackTimerRef.current);
       }
       
+      // Check if this is a fallback response
+      if (result.fallback) {
+        setError('Emotion detection service unavailable. Please try again later.');
+        setMessage(null);
+        return;
+      }
+      
       // Handle no_face with human feedback
       if (result.emotion === 'no_face') {
         setMessage('Face not detected. Please look at the camera');
@@ -351,6 +342,8 @@ export default function EmotionCamera({ onEmotionDetected }) {
         confidence: result.confidence,
       });
 
+      setMessage('Analysis complete!');
+
       // Insert into Supabase
       if (user) {
         await insertEmotion(result);
@@ -363,6 +356,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
     } catch (err) {
       console.error('Detection error:', err);
       setError('Emotion detection failed. Please try again.');
+      setMessage(null);
       // Show last known emotion as fallback
       if (lastEmotion) {
         setEmotionResult({
@@ -380,39 +374,11 @@ export default function EmotionCamera({ onEmotionDetected }) {
   };
 
   const mapEmotionToMood = (emotion) => {
-    // Map backend emotions to allowed mood values in schema
-    // Preserve more distinct emotions for better variety
-    const moodMap = {
-      'stressed': 'stressed',
-      'angry': 'angry',
-      'fearful': 'fearful',
-      'disgusted': 'disgusted',
-      'sad': 'sad',
-      'calm': 'calm',
-      'neutral': 'neutral',
-      'happy': 'happy',
-      'focused': 'focused',
-      'surprised': 'surprised',
-    };
-    return moodMap[emotion] || emotion || 'neutral';
+    return toStoredEmotion(emotion);
   };
 
   const mapEmotionToStress = (emotion) => {
-    const stressMap = {
-      'stressed': 80,
-      'angry': 75,
-      'fearful': 70,
-      'disgusted': 60,
-      'sad': 65,
-      'surprised': 50,
-      'happy': 30,
-      'neutral': 25,
-      'calm': 20,
-      'focused': 25,
-      'no_face': 30,
-      'model_missing': 30,
-    };
-    return stressMap[emotion] || 30;
+    return mapEmotionToStressScore(emotion);
   };
 
   const getEmotionColor = () => {
