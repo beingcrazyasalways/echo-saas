@@ -313,6 +313,8 @@ export default function EmotionCamera({ onEmotionDetected }) {
       setMessage('Analyzing...');
       const result = await detectEmotion(file);
       
+      console.log('[DEBUG] Emotion detection result:', result);
+      
       // Clear fallback timer
       if (fallbackTimerRef.current) {
         clearTimeout(fallbackTimerRef.current);
@@ -320,6 +322,7 @@ export default function EmotionCamera({ onEmotionDetected }) {
       
       // Check if this is a fallback response
       if (result.fallback) {
+        console.log('[DEBUG] Fallback response detected');
         setError('Emotion detection service unavailable. Please try again later.');
         setMessage(null);
         return;
@@ -327,12 +330,22 @@ export default function EmotionCamera({ onEmotionDetected }) {
       
       // Handle no_face with human feedback
       if (result.emotion === 'no_face') {
+        console.log('[DEBUG] No face detected');
         setMessage('Face not detected. Please look at the camera');
+        return;
+      }
+      
+      // Handle error responses
+      if (result.emotion === 'error') {
+        console.log('[DEBUG] Error response:', result.error);
+        setError(result.error || 'Emotion detection failed');
+        setMessage(null);
         return;
       }
       
       // Map to system emotion
       const mapped = mapEmotionToMood(result.emotion);
+      console.log('[DEBUG] Mapped emotion:', mapped, 'from:', result.emotion);
       
       // Cache last emotion
       setLastEmotion(mapped);
