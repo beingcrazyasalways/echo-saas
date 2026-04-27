@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+const MISTRAL_DOCUMENT_API_KEY = process.env.MISTRAL_DOCUMENT_API_KEY;
 const MISTRAL_OCR_URL = 'https://api.mistral.ai/v1/ocr';
 
 export async function POST(request) {
@@ -12,8 +12,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
 
-    if (!MISTRAL_API_KEY) {
-      return NextResponse.json({ error: 'Mistral API key not configured' }, { status: 500 });
+    if (!MISTRAL_DOCUMENT_API_KEY) {
+      return NextResponse.json({ error: 'Mistral Document API key not configured' }, { status: 500 });
     }
 
     // Convert file to blob for Mistral API
@@ -27,7 +27,7 @@ export async function POST(request) {
     const response = await fetch(MISTRAL_OCR_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${MISTRAL_API_KEY}`,
+        'Authorization': `Bearer ${MISTRAL_DOCUMENT_API_KEY}`,
       },
       body: mistralFormData,
     });
