@@ -386,26 +386,11 @@ function ChatUI({
       {/* Input Area */}
       <form onSubmit={handleSend} className="p-4 border-t border-white/10 bg-white/5">
         <div className="flex gap-2">
-          {onOpenVoiceMode && (
-            <button
-              type="button"
-              onClick={onOpenVoiceMode}
-              className="p-3 rounded-xl bg-white/10 text-gray-400 hover:bg-white/20 transition-colors"
-              title="Voice Mode"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </button>
-          )}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={processingDocument || loading}
-            className="p-3 rounded-xl bg-white/10 text-gray-400 hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 rounded-xl bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Upload Document"
           >
             {processingDocument ? (
@@ -421,6 +406,21 @@ function ChatUI({
             onChange={handleFileUpload}
             className="hidden"
           />
+          {onOpenVoiceMode && (
+            <button
+              type="button"
+              onClick={onOpenVoiceMode}
+              className="p-3 rounded-xl bg-white/10 text-gray-400 hover:bg-white/20 transition-colors"
+              title="Voice Mode"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+          )}
           <input
             type="text"
             value={input}
