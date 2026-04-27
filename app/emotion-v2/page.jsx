@@ -6,35 +6,48 @@ import EmotionCamera from '@/components/EmotionCamera';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import { getEmotionConfig, getEmotionDisplayName, isCustomEmotion } from '@/lib/emotionConfig';
+import { useEmotion } from '@/contexts/EmotionContext';
 
 export default function EmotionV2Page() {
-  const [mood, setMood] = useState('calm');
+  const { currentEmotion, updateEmotion } = useEmotion();
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    getCurrentUser().then(setUser);
+    let isMounted = true;
+
+    const loadCurrentUser = async () => {
+      const { user: currentUser } = await getCurrentUser();
+      if (isMounted) {
+        setUser(currentUser);
+      }
+    };
+
+    loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleEmotionDetected = (mappedEmotion) => {
-    setMood(mappedEmotion);
-    localStorage.setItem('currentEmotion', mappedEmotion);
+    updateEmotion(mappedEmotion);
   };
 
-  const config = getEmotionConfig(mood);
+  const config = getEmotionConfig(currentEmotion);
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/30 to-slate-900 ${config.glow} transition-all duration-500`}>
       <div className="flex flex-col lg:flex-row">
         <Sidebar 
-          currentEmotion={mood}
+          currentEmotion={currentEmotion}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
         <div className="flex-1 w-full min-w-0 overflow-x-hidden">
           <Header 
             user={user} 
-            currentEmotion={mood}
+            currentEmotion={currentEmotion}
             onMenuToggle={() => setSidebarOpen(true)}
           />
           <main className="p-3 sm:p-4 lg:p-5">
@@ -53,7 +66,7 @@ export default function EmotionV2Page() {
               </div>
 
               {/* Current Mood Display */}
-              {mood && (
+              {currentEmotion && (
                 <div className={`backdrop-blur-xl bg-gradient-to-r ${config.gradient} ${config.border} rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl transition-all duration-300 hover:scale-105`}>
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="p-3 sm:p-4 rounded-xl bg-white/10">
@@ -62,9 +75,9 @@ export default function EmotionV2Page() {
                     <div>
                       <p className="text-xs sm:text-sm text-gray-400 mb-1">Current Mood</p>
                       <p className={`text-xl sm:text-2xl lg:text-3xl font-bold capitalize ${config.color}`}>
-                        {getEmotionDisplayName(mood)}
+                        {getEmotionDisplayName(currentEmotion)}
                       </p>
-                      {isCustomEmotion(mood) && (
+                      {isCustomEmotion(currentEmotion) && (
                         <p className="text-xs text-gray-400 mt-1">Custom emotion detected</p>
                       )}
                     </div>

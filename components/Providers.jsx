@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { EmotionProvider } from '../contexts/EmotionContext';
 
 export function Providers({ children }) {
   const [queryClient] = useState(
@@ -19,7 +20,9 @@ export function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <EmotionProvider>
+        {children}
+      </EmotionProvider>
     </QueryClientProvider>
   );
 }

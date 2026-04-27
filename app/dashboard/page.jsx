@@ -25,20 +25,22 @@ import MicroNudge from '../../components/MicroNudge';
 import ProfilePanel from '../../components/ProfilePanel';
 import { Plus, AlertCircle, Target, Zap, Camera, Flame, Calendar, Clock } from 'lucide-react';
 import { useTimeContext } from '../../hooks/useTimeContext';
+import { useEmotion } from '@/contexts/EmotionContext';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { dayOfWeek, formattedTime, sessionDuration, timeOfDay } = useTimeContext();
+  const { currentEmotion, updateEmotion } = useEmotion();
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [tasks, setTasks] = useState([]);
-  const [currentEmotion, setCurrentEmotion] = useState('');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  const [chatSuggestion, setChatSuggestion] = useState(null);
   const [showChat, setShowChat] = useState(false);
 
   const toggleChat = () => {
@@ -64,6 +66,20 @@ export default function DashboardPage() {
   const [taskFeedback, setTaskFeedback] = useState(null);
   const [addingTask, setAddingTask] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const setMessage = (value) => {
+    if (!value) {
+      setTaskFeedback(null);
+      return;
+    }
+
+    const isError = value.toLowerCase().includes('fail');
+    const cleanedMessage = value.replace(/[^\x20-\x7E]+/g, ' ').trim();
+    setTaskFeedback({
+      type: isError ? 'error' : 'success',
+      message: cleanedMessage,
+    });
+  };
 
   useEffect(() => {
     checkAuth();
@@ -115,7 +131,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (currentEmotion) {
-      localStorage.setItem('currentEmotion', currentEmotion);
+      // EmotionContext handles localStorage sync
     }
   }, [currentEmotion]);
 
@@ -124,7 +140,7 @@ export default function DashboardPage() {
       if (document.visibilityState === 'visible') {
         const savedEmotion = localStorage.getItem('currentEmotion');
         if (savedEmotion && savedEmotion !== currentEmotion) {
-          setCurrentEmotion(savedEmotion);
+          updateEmotion(savedEmotion);
           loadEmotion();
         }
       }
@@ -239,15 +255,13 @@ export default function DashboardPage() {
     // Get manual emotion from localStorage or current state
     const manualEmotion = localStorage.getItem('currentEmotion') || currentEmotion || 'calm';
     
-    // Fetch latest emotion from Supabase (prioritize AI source)
+    // Fetch latest stored emotion from Supabase
     const { data } = await getLatestEmotion(user.id);
-    const aiEmotion = data?.source === 'ai' ? data.mood : null;
+    const latestStoredEmotion = data?.mood || null;
     
-    // Use aiEmotion ?? manualEmotion ?? "neutral" pattern
-    const newEmotion = aiEmotion ?? manualEmotion ?? 'neutral';
+    const newEmotion = latestStoredEmotion ?? manualEmotion ?? 'neutral';
     
-    setCurrentEmotion(newEmotion);
-    localStorage.setItem('currentEmotion', newEmotion);
+    updateEmotion(newEmotion);
     
     if (data) {
       setLatestEmotionData(data);
@@ -456,40 +470,54 @@ export default function DashboardPage() {
   };
 
   const handleAIAddTask = async (title, priority = 'medium') => {
-    if (!user || !title.trim()) return;
+    if (!user || !title.trim()) return null;
     logger.task('AI requesting to add task:', { title, priority });
     try {
       const { data } = await addTask(user.id, title.trim(), priority);
-      if (data) {
-        setTasks([data[0], ...tasks]);
+      if (data?.[0]) {
+        setTasks((prev) => [data[0], ...prev]);
         await logActivity(user.id, 'task_added', data[0].id, currentEmotion);
         setLastActivityTime(Date.now());
         runProactiveAnalysis();
+        setTaskFeedback({ type: 'success', message: `Added "${data[0].title}"` });
+        setTimeout(() => setTaskFeedback(null), 2000);
         logger.task('Task added successfully via AI:', { title: data[0].title });
+        return data[0];
       }
     } catch (error) {
       logger.error('[Task] Error adding task via AI:', error);
+      setTaskFeedback({ type: 'error', message: 'AI could not add that task' });
+      setTimeout(() => setTaskFeedback(null), 2000);
     }
+    return null;
   };
 
   const handleAIDeleteTask = async (title) => {
-    if (!user || !title.trim()) return;
+    if (!user || !title.trim()) return null;
     logger.task('AI requesting to delete task:', { title });
     try {
-      const taskToDelete = tasks.find(t => t.title.toLowerCase() === title.toLowerCase());
+      const taskToDelete = tasks.find((task) => task.title.toLowerCase() === title.toLowerCase());
       if (taskToDelete) {
         await deleteTask(taskToDelete.id);
-        setTasks(tasks.filter(t => t.id !== taskToDelete.id));
+        setTasks((prev) => prev.filter((task) => task.id !== taskToDelete.id));
         await logActivity(user.id, 'task_deleted', taskToDelete.id, currentEmotion);
         setLastActivityTime(Date.now());
         runProactiveAnalysis();
+        setTaskFeedback({ type: 'success', message: `Deleted "${taskToDelete.title}"` });
+        setTimeout(() => setTaskFeedback(null), 2000);
         logger.task('Task deleted successfully via AI:', { title: taskToDelete.title });
+        return taskToDelete;
       } else {
         logger.warn('[Task] Task not found for deletion:', { title });
+        setTaskFeedback({ type: 'error', message: `Task not found: "${title}"` });
+        setTimeout(() => setTaskFeedback(null), 2000);
       }
     } catch (error) {
       logger.error('[Task] Error deleting task via AI:', { error });
+      setTaskFeedback({ type: 'error', message: 'AI could not delete that task' });
+      setTimeout(() => setTaskFeedback(null), 2000);
     }
+    return null;
   };
 
   const handleSuggestionAction = async (suggestion) => {
@@ -909,7 +937,7 @@ export default function DashboardPage() {
               behaviorPatterns={behaviorPatterns}
               userProfile={userProfile}
               onSuggestionUpdate={(suggestion) => {
-                setSuggestion(suggestion);
+                setChatSuggestion(suggestion);
                 setShowSuggestionModal(true);
               }}
               onClose={toggleChat}
@@ -955,15 +983,26 @@ export default function DashboardPage() {
       )}
 
       {showSuggestionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowSuggestionModal(false)}>
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowSuggestionModal(false);
+            setChatSuggestion(null);
+          }}
+        >
           <div className="glass-card p-4 sm:p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-3 sm:mb-4">
               <AlertCircle size={20} className="text-neon-cyan" />
               <h3 className="text-base sm:text-lg font-semibold text-white">AI Suggestion</h3>
             </div>
-            <p className="text-sm sm:text-base text-gray-300 mb-3 sm:mb-4">{suggestion?.message}</p>
+            <p className="text-sm sm:text-base text-gray-300 mb-3 sm:mb-4">
+              {chatSuggestion?.suggestion || chatSuggestion?.message}
+            </p>
             <button
-              onClick={() => setShowSuggestionModal(false)}
+              onClick={() => {
+                setShowSuggestionModal(false);
+                setChatSuggestion(null);
+              }}
               className="w-full py-3 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-lg text-white font-medium hover:opacity-90 transition-opacity text-sm sm:text-base"
             >
               Got it
