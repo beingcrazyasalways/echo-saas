@@ -53,28 +53,54 @@ async function extractFromTextFile(file) {
 }
 
 /**
- * Extract text from PDF file
- * Note: PDF extraction disabled for browser compatibility
+ * Extract text from PDF file using Mistral OCR
  */
 async function extractFromPDF(file) {
-  throw new Error('PDF extraction is currently disabled. Please convert to TXT or use an image file.');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/document/ocr', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'PDF extraction failed');
+    }
+
+    const data = await response.json();
+    return data.text;
+  } catch (error) {
+    console.error('PDF extraction error:', error);
+    throw new Error(`PDF extraction failed: ${error.message}`);
+  }
 }
 
 /**
- * Extract text from image using OCR
- * Note: Requires Tesseract.js
+ * Extract text from image using Mistral OCR
  */
 async function extractFromImage(file) {
   try {
-    // Dynamic import to avoid build issues
-    const Tesseract = (await import('tesseract.js')).default;
-    const result = await Tesseract.recognize(file, 'eng', {
-      logger: (m) => console.log(m),
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/document/ocr', {
+      method: 'POST',
+      body: formData,
     });
-    return result.data.text;
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Image extraction failed');
+    }
+
+    const data = await response.json();
+    return data.text;
   } catch (error) {
-    console.error('OCR extraction error:', error);
-    throw new Error('OCR failed. Make sure Tesseract.js is installed.');
+    console.error('Image extraction error:', error);
+    throw new Error(`Image extraction failed: ${error.message}`);
   }
 }
 
