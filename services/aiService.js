@@ -170,10 +170,10 @@ function extractTasksManually(text) {
 /**
  * Create download URL from text content
  */
-function createDownloadUrl(text, mimeType) {
+async function createDownloadUrl(text, mimeType) {
   if (mimeType === 'application/pdf') {
     // Use jsPDF for PDF generation
-    const { jsPDF } = require('jspdf');
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     
     // Add text to PDF (simple wrapping)
