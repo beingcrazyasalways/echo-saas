@@ -200,22 +200,28 @@ def predict_emotion(image: np.ndarray) -> tuple[str, float]:
         
     Returns:
         Tuple of (emotion_label, confidence)
-        Falls back to ("calm", 0.5) if model not loaded or prediction fails
+        Returns actual status instead of silent fallbacks
     """
     recognizer = get_recognizer()
     
-    # Model not loaded → fallback
+    # Model not loaded → return actual status
     if recognizer is None:
-        return "calm", 0.5
+        print("[ERROR] Model recognizer is None")
+        return "model_missing", 0.0
 
     try:
         # Detect face
         face = recognizer.detect_face(image)
         if face is None:
+            print("[WARNING] No face detected in image")
             return "no_face", 0.0
         
         # Predict emotion
         prediction = recognizer.predict(face)
+        print(f"[INFO] Model prediction: {prediction.label} (confidence: {prediction.confidence})")
         return prediction.label, prediction.confidence
-    except Exception:
-        return "calm", 0.5
+    except Exception as e:
+        print(f"[ERROR] Exception in predict_emotion: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return "error", 0.0

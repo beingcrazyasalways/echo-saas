@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
@@ -6,10 +8,22 @@ from emotion_model import predict_emotion
 
 app = FastAPI(title="Emotion Detection API")
 
+
+def get_allowed_origins():
+    configured_origins = os.getenv("ALLOWED_ORIGINS")
+    if configured_origins:
+        return [origin.strip() for origin in configured_origins.split(",") if origin.strip()]
+
+    return [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://echowebai.vercel.app",
+    ]
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,32 +34,39 @@ app.add_middleware(
 async def detect_emotion(file: UploadFile = File(...)):
     """
     Detect emotion from uploaded image.
-    Falls back to calm/0.5 if anything goes wrong.
+    Returns detailed error information instead of silent fallbacks.
     """
     try:
+        print(f"[INFO] Received file: {file.filename}, size: {file.size if hasattr(file, 'size') else 'unknown'}")
         contents = await file.read()
+        print(f"[INFO] Read {len(contents)} bytes")
+        
         nparr = np.frombuffer(contents, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if image is None:
-            return {"emotion": "calm", "confidence": 0.5}
+            print("[ERROR] Failed to decode image")
+            return {"emotion": "error", "confidence": 0.0, "error": "Failed to decode image"}
 
-        # Resize to reduce processing load
-        image = cv2.resize(image, (48, 48))
+        print(f"[INFO] Image decoded successfully, shape: {image.shape}")
 
         # Try real model
         emotion, confidence = predict_emotion(image)
+        print(f"[INFO] Prediction result: emotion={emotion}, confidence={confidence}")
 
-        # No face detected or model missing → fallback
-        if emotion in ("no_face", "model_missing") or confidence == 0.0:
-            return {"emotion": "calm", "confidence": 0.5}
+        # No face detected or model missing → return actual status
+        if emotion in ("no_face", "model_missing"):
+            print(f"[WARNING] {emotion} detected")
+            return {"emotion": emotion, "confidence": confidence, "status": emotion}
 
-        return {"emotion": emotion, "confidence": float(confidence)}
+        return {"emotion": emotion, "confidence": float(confidence), "status": "success"}
 
     except Exception as e:
-        print("ERROR:", e)
-        # Fallback (non-negotiable)
-        return {"emotion": "calm", "confidence": 0.5}
+        print(f"[ERROR] Exception in detect_emotion: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Return actual error instead of fallback
+        return {"emotion": "error", "confidence": 0.0, "error": str(e), "status": "error"}
 
 
 @app.get("/")
