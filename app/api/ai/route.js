@@ -50,9 +50,69 @@ Respond in JSON format with this structure:
   "action": null | { "type": "add_task" | "delete_task", "title": "task title", "priority": "low|medium|high" }
 }`;
 
+function extractTaskAction(text) {
+  if (!text) {
+    return null;
+  }
+
+  const normalized = text.trim();
+  const addMatch = normalized.match(/(?:add|create)\s+(?:a\s+)?(?:task\s+)?(?:"([^"]+)"|'([^']+)'|(.+?))(?:\s+(?:with\s+)?priority\s+(low|medium|high))?$/i);
+  if (addMatch) {
+    const title = (addMatch[1] || addMatch[2] || addMatch[3] || '').trim();
+    if (title) {
+      return {
+        type: 'add_task',
+        title,
+        priority: (addMatch[4] || 'medium').toLowerCase(),
+      };
+    }
+  }
+
+  const deleteMatch = normalized.match(/(?:delete|remove)\s+(?:the\s+)?(?:task\s+)?(?:"([^"]+)"|'([^']+)'|(.+))$/i);
+  if (deleteMatch) {
+    const title = (deleteMatch[1] || deleteMatch[2] || deleteMatch[3] || '').trim();
+    if (title) {
+      return {
+        type: 'delete_task',
+        title,
+      };
+    }
+  }
+
+  return null;
+}
+
+function normalizeAction(action) {
+  if (!action || !action.type || !action.title) {
+    return null;
+  }
+
+  if (action.type === 'add_task') {
+    return {
+      type: 'add_task',
+      title: action.title.trim(),
+      priority: ['low', 'medium', 'high'].includes(action.priority)
+        ? action.priority
+        : 'medium',
+    };
+  }
+
+  if (action.type === 'delete_task') {
+    return {
+      type: 'delete_task',
+      title: action.title.trim(),
+    };
+  }
+
+  return null;
+}
+
 export async function POST(request) {
+  let body = {};
+
   try {
-    const { message, tasks, emotion, behaviorPatterns, userProfile } = await request.json();
+    body = await request.json();
+    const { message, tasks, emotion, behaviorPatterns, userProfile } = body;
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -66,6 +126,7 @@ export async function POST(request) {
       return NextResponse.json({
         message: fallback.message,
         suggestion: fallback.task?.title || fallback.message,
+        action: extractTaskAction(message),
       });
     }
 
@@ -141,43 +202,9 @@ ${behaviorContext}
     const aiContent = JSON.parse(data.choices[0].message.content);
 
     // Parse action from message if not explicitly provided
-    let action = aiContent.action;
+    let action = normalizeAction(aiContent.action);
     if (!action) {
-      const message = aiContent.message.toLowerCase();
-      
-      // Check for add task requests in natural language
-      if (message.includes('add') && (message.includes('task') || message.includes('as a task'))) {
-        // Extract task title and priority from natural language
-        let title = '';
-        let priority = 'medium';
-        
-        // Try to extract title after "add" or "add task"
-        const addMatch = message.match(/add\s+(?:task\s+)?(.+?)(?:\s+(?:with|as)\s+(?:priority\s+)?(\w+))?$/i);
-        if (addMatch) {
-          title = addMatch[1].trim();
-          priority = addMatch[2] || 'medium';
-          
-          // Clean up common phrases
-          title = title.replace(/\s+(as a task|as task)$/i, '').trim();
-          title = title.replace(/\s+(with priority|priority)$/i, '').trim();
-        }
-        
-        if (title) {
-          action = {
-            type: 'add_task',
-            title: title,
-            priority: priority
-          };
-        }
-      } else if (message.includes('delete') && message.includes('task')) {
-        const match = message.match(/delete\s+(?:task\s+)?(.+)/i);
-        if (match) {
-          action = {
-            type: 'delete_task',
-            title: match[1].trim()
-          };
-        }
-      }
+      action = extractTaskAction(aiContent.message) || extractTaskAction(message);
     }
 
     return NextResponse.json({
@@ -188,13 +215,13 @@ ${behaviorContext}
 
   } catch (error) {
     console.error('AI API error:', error);
-    
-    const { message, tasks, emotion } = await request.json().catch(() => ({}));
-    const fallback = localGenerateSuggestion(tasks || [], emotion || '');
+
+    const fallback = localGenerateSuggestion(body.tasks || [], body.emotion || '');
     
     return NextResponse.json({
       message: fallback.message,
       suggestion: fallback.task?.title || fallback.message,
+      action: extractTaskAction(body.message),
     });
   }
 }
