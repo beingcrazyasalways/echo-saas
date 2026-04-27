@@ -1,21 +1,71 @@
 'use client';
 
 import { useState, useRef, useEffect, memo } from 'react';
-import { Send, Sparkles, X, Volume2, VolumeX } from 'lucide-react';
+import { Send, Sparkles, X, Volume2, VolumeX, Upload, FileText } from 'lucide-react';
 
-function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
+function ChatUI({
+  currentEmotion,
+  onEmotionChange,
+  onClose,
+  onOpenVoiceMode,
+  tasks = [],
+  behaviorPatterns = null,
+  userProfile = null,
+  onSuggestionUpdate,
+  onAddTask,
+  onDeleteTask,
+  userEmail,
+  userId,
+}) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [documentContext, setDocumentContext] = useState(null);
+  const [extractedText, setExtractedText] = useState('');
+  const [processingDocument, setProcessingDocument] = useState(false);
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const shouldUseStructuredAssistant = Boolean(
+    onSuggestionUpdate || onAddTask || onDeleteTask || behaviorPatterns || userProfile || tasks.length
+  );
+
+  const executeAssistantAction = async (action) => {
+    if (!action || !action.type) {
+      return null;
+    }
+
+    if (action.type === 'add_task') {
+      if (onAddTask && action.title) {
+        const createdTask = await onAddTask(action.title, action.priority || 'medium');
+        if (createdTask) {
+          return `Task added: "${createdTask.title}".`;
+        }
+      }
+      return action.title ? `Suggested task: "${action.title}".` : null;
+    }
+
+    if (action.type === 'delete_task') {
+      if (onDeleteTask && action.title) {
+        const deletedTask = await onDeleteTask(action.title);
+        if (deletedTask) {
+          return `Task removed: "${deletedTask.title}".`;
+        }
+      }
+      return action.title ? `Task to remove: "${action.title}".` : null;
+    }
+
+    return null;
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -27,29 +77,111 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
     setLoading(true);
 
     try {
+      // Check if user is responding to document options
+      if (documentContext && extractedText) {
+        const lowerMessage = userMessage.toLowerCase();
+        
+        // Handle document actions
+        if (lowerMessage.includes('summarize') || lowerMessage.includes('summary')) {
+          await handleDocumentAction('summarize');
+          setLoading(false);
+          return;
+        }
+        
+        if (lowerMessage.includes('task') || lowerMessage.includes('extract task')) {
+          await handleDocumentAction('extract_tasks');
+          setLoading(false);
+          return;
+        }
+        
+        if (lowerMessage.includes('txt') || lowerMessage.includes('text file')) {
+          await handleDocumentAction('convert_txt');
+          setLoading(false);
+          return;
+        }
+        
+        if (lowerMessage.includes('pdf')) {
+          await handleDocumentAction('convert_pdf');
+          setLoading(false);
+          return;
+        }
+
+        if (lowerMessage === 'preview' || lowerMessage.includes('show text')) {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: `Full extracted text:\n\n${extractedText}` 
+          }]);
+          setLoading(false);
+          return;
+        }
+      }
+
       // Get stress level from localStorage or default
       const stressLevel = localStorage.getItem('stressLevel') || null;
-      
-      // Get task load (simplified - could be enhanced)
-      const taskLoad = 0; // Will be enhanced later
 
-      const response = await fetch('/api/ai-chat', {
+      const taskLoad = Array.isArray(tasks)
+        ? tasks.filter((task) => !task.completed).length
+        : 0;
+
+      // Build message with document context if available
+      let finalMessage = userMessage;
+      if (documentContext && extractedText) {
+        finalMessage = `[Document Context: ${documentContext.name}]\n\n${extractedText}\n\nUser Request: ${userMessage}`;
+      }
+
+      const endpoint = shouldUseStructuredAssistant ? '/api/ai' : '/api/ai-chat';
+      const payload = shouldUseStructuredAssistant
+        ? {
+            message: finalMessage,
+            tasks,
+            emotion: currentEmotion || 'neutral',
+            behaviorPatterns,
+            userProfile,
+            userEmail,
+            userId,
+            stressLevel,
+            taskLoad,
+            documentContext,
+          }
+        : {
+            message: finalMessage,
+            emotion: currentEmotion || 'neutral',
+            stressLevel,
+            taskLoad,
+            documentContext,
+          };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: userMessage,
-          emotion: currentEmotion || 'neutral',
-          stressLevel: stressLevel,
-          taskLoad: taskLoad,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      if (!response.ok) {
+        throw new Error('Assistant request failed');
+      }
+
       const data = await response.json();
-      
-      const assistantMessage = data.response || 'Sorry, I could not generate a response.';
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      let assistantMessage = data.response || data.message || 'Sorry, I could not generate a response.';
+
+      if (shouldUseStructuredAssistant) {
+        const modalMessage = data.suggestion || data.message;
+        if (modalMessage && onSuggestionUpdate) {
+          onSuggestionUpdate({
+            ...data,
+            message: modalMessage,
+          });
+        }
+
+        const actionResult = await executeAssistantAction(data.action);
+        if (actionResult) {
+          assistantMessage = `${assistantMessage}\n\n${actionResult}`;
+        }
+      }
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }]);
 
       // Text-to-Speech if enabled
       if (speechEnabled && window.speechSynthesis) {
@@ -57,9 +189,55 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDocumentAction = async (action) => {
+    try {
+      const { processDocumentWithAI } = await import('@/services/aiService');
+      const result = await processDocumentWithAI(extractedText, action);
+      
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: result.message 
+      }]);
+
+      // Handle different action outputs
+      if (action === 'convert_txt' && result.downloadUrl) {
+        // Trigger download
+        const link = document.createElement('a');
+        link.href = result.downloadUrl;
+        link.download = `${documentContext.name}.txt`;
+        link.click();
+      }
+
+      if (action === 'convert_pdf' && result.downloadUrl) {
+        // Trigger download
+        const link = document.createElement('a');
+        link.href = result.downloadUrl;
+        link.download = `${documentContext.name}.pdf`;
+        link.click();
+      }
+
+      if (action === 'extract_tasks' && result.tasks && onAddTask) {
+        // Add tasks to dashboard
+        for (const task of result.tasks) {
+          await onAddTask(task.title, task.priority);
+        }
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `Added ${result.tasks.length} tasks to your dashboard.` 
+        }]);
+      }
+    } catch (error) {
+      console.error('Document action error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I couldn\'t process that action. Please try again.' 
+      }]);
     }
   };
 
@@ -84,6 +262,46 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
     setSpeechEnabled(!speechEnabled);
     if (!speechEnabled && window.speechSynthesis) {
       window.speechSynthesis.cancel();
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setProcessingDocument(true);
+    setDocumentContext({ name: file.name, type: file.type });
+
+    try {
+      const { extractTextFromDocument } = await import('@/services/documentService');
+      const text = await extractTextFromDocument(file);
+      setExtractedText(text);
+      
+      // Add system message about document
+      setMessages(prev => [...prev, { 
+        role: 'system', 
+        content: `Document uploaded: ${file.name}\n\nExtracted content:\n${text.substring(0, 500)}${text.length > 500 ? '...' : ''}` 
+      }]);
+
+      // Show preview option
+      setShowDocumentPreview(true);
+
+      // Ask user what to do
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'I\'ve analyzed your document. What would you like to do with it?\n\nOptions:\n- Summarize\n- Extract tasks\n- Convert to TXT\n- Convert to PDF\n- Ask questions about it\n\nType "preview" to see the full extracted text.' 
+      }]);
+    } catch (error) {
+      console.error('Document processing error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I couldn\'t process that document. Please try a different file.' 
+      }]);
+    } finally {
+      setProcessingDocument(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -183,6 +401,26 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
               </svg>
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={processingDocument || loading}
+            className="p-3 rounded-xl bg-white/10 text-gray-400 hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Upload Document"
+          >
+            {processingDocument ? (
+              <div className="w-5 h-5 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Upload size={20} />
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,.pdf,.doc,.docx,image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
           <input
             type="text"
             value={input}
@@ -199,6 +437,19 @@ function ChatUI({ currentEmotion, onEmotionChange, onClose, onOpenVoiceMode }) {
             <Send size={20} />
           </button>
         </div>
+        {documentContext && (
+          <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-teal-500/10 border border-teal-500/20 rounded-lg">
+            <FileText size={14} className="text-teal-400" />
+            <span className="text-xs text-teal-300">{documentContext.name}</span>
+            <button
+              type="button"
+              onClick={() => setDocumentContext(null)}
+              className="ml-auto text-gray-400 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );
