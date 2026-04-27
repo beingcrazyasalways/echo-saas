@@ -944,7 +944,7 @@ export default function DashboardPage() {
       />
 
       {showChat && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 pointer-events-none">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-2 sm:p-4 pointer-events-none">
           <div className="w-full max-w-lg h-full sm:h-auto max-h-screen overflow-y-auto pointer-events-auto">
             <ChatUI
               tasks={tasks}
@@ -966,7 +966,7 @@ export default function DashboardPage() {
       )}
 
       {automationAlert && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 pointer-events-none">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-4 pointer-events-none">
           <div className="backdrop-blur-xl bg-slate-900/90 border border-white/10 rounded-2xl p-4 sm:p-6 max-w-md w-full mx-4 shadow-2xl pointer-events-auto">
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
               {automationAlert.type === 'stress' && '⚠️ Stress Alert'}
