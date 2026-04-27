@@ -198,8 +198,24 @@ function ChatUI({
   const handleDocumentAction = async (action) => {
     try {
       console.log('[DEBUG] Handling document action:', action);
-      const { processDocumentWithAI } = await import('@/services/aiService');
-      const result = await processDocumentWithAI(extractedText, action);
+      
+      const response = await fetch('/api/document/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: extractedText,
+          action,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to process document');
+      }
+
+      const result = await response.json();
       console.log('[DEBUG] AI result:', result);
       
       setMessages(prev => [...prev, { 

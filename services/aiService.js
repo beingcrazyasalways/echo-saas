@@ -1,9 +1,10 @@
 /**
  * AI Service for Document Processing
  * Handles AI-based document analysis and actions using Mistral AI
+ * Note: This should be called from server-side API routes to keep API key secure
  */
 
-const MISTRAL_API_KEY = process.env.NEXT_PUBLIC_MISTRAL_API_KEY || process.env.MISTRAL_API_KEY;
+const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
 
 /**
@@ -14,7 +15,7 @@ const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
  */
 export async function processDocumentWithAI(text, action) {
   if (!MISTRAL_API_KEY) {
-    throw new Error('Mistral API key not configured');
+    throw new Error('Mistral API key not configured in server environment');
   }
 
   const prompt = buildActionPrompt(text, action);
