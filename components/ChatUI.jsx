@@ -197,8 +197,10 @@ function ChatUI({
 
   const handleDocumentAction = async (action) => {
     try {
+      console.log('[DEBUG] Handling document action:', action);
       const { processDocumentWithAI } = await import('@/services/aiService');
       const result = await processDocumentWithAI(extractedText, action);
+      console.log('[DEBUG] AI result:', result);
       
       setMessages(prev => [...prev, { 
         role: 'assistant', 
@@ -233,10 +235,10 @@ function ChatUI({
         }]);
       }
     } catch (error) {
-      console.error('Document action error:', error);
+      console.error('[ERROR] Document action error:', error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Sorry, I couldn\'t process that action. Please try again.' 
+        content: `Sorry, I couldn't process that action. Error: ${error.message}` 
       }]);
     }
   };
