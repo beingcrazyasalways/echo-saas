@@ -66,7 +66,7 @@ function buildActionPrompt(text, action) {
 
   switch (action) {
     case 'summarize':
-      return `Summarize the following document in 3-5 bullet points:\n\n${truncatedText}\n\nProvide a concise summary.`;
+      return `Summarize the following document in 3-5 bullet points. Return ONLY plain text, no JSON, no formatting. Just the summary:\n\n${truncatedText}`;
 
     case 'extract_tasks':
       return `Extract actionable tasks from the following document. For each task, identify:\n- Task title\n- Priority (high/medium/low)\n- Deadline (if mentioned)\n\nDocument:\n${truncatedText}\n\nReturn in JSON format: {"tasks": [{"title": "...", "priority": "...", "deadline": "..."}]}`;
