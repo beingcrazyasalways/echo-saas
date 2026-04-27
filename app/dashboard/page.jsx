@@ -30,10 +30,10 @@ import { useEmotion } from '@/contexts/EmotionContext';
 export default function DashboardPage() {
   const router = useRouter();
   const { dayOfWeek, formattedTime, sessionDuration, timeOfDay } = useTimeContext();
-  const { currentEmotion, updateEmotion } = useEmotion();
+  const { currentEmotion, updateEmotion, tasks: globalTasks, addTask: globalAddTask, toggleTask: globalToggleTask, deleteTask: globalDeleteTask } = useEmotion();
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([]); // Keep for Supabase sync, will merge with global
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [suggestion, setSuggestion] = useState(null);
@@ -407,6 +407,10 @@ export default function DashboardPage() {
     if (!user || !newTaskTitle.trim()) return;
     setAddingTask(true);
     try {
+      // Add to global state
+      globalAddTask({ title: newTaskTitle.trim(), priority: newTaskPriority });
+      
+      // Also sync to Supabase if user is logged in
       const { data } = await addTask(user.id, newTaskTitle.trim(), newTaskPriority);
       if (data) {
         setTasks([data[0], ...tasks]);
@@ -427,6 +431,10 @@ export default function DashboardPage() {
   };
 
   const handleToggleTask = async (taskId, completed) => {
+    // Update global state
+    globalToggleTask(taskId);
+    
+    // Also sync to Supabase
     const { data } = await toggleTask(taskId, completed);
     if (data) {
       setTasks(tasks.map((task) => (task.id === taskId ? data[0] : task)));
@@ -450,12 +458,19 @@ export default function DashboardPage() {
   };
 
   const handleDeleteTask = async (taskId) => {
-    await deleteTask(taskId);
-    setTasks(tasks.filter((task) => task.id !== taskId));
-    await logActivity(user.id, 'task_deleted', taskId, currentEmotion);
-    setTaskFeedback({ type: 'success', message: 'Task deleted' });
-    setTimeout(() => setTaskFeedback(null), 2000);
-    runProactiveAnalysis();
+    // Update global state
+    globalDeleteTask(taskId);
+    
+    // Also sync to Supabase
+    const { data } = await deleteTask(taskId);
+    if (data) {
+      setTasks(tasks.filter((task) => task.id !== taskId));
+      await logActivity(user.id, 'task_deleted', taskId, currentEmotion);
+      setLastActivityTime(Date.now());
+      runProactiveAnalysis();
+      setTaskFeedback({ type: 'success', message: 'Task deleted' });
+      setTimeout(() => setTaskFeedback(null), 2000);
+    }
   };
 
   const handleUpdatePriority = async (taskId, priority) => {

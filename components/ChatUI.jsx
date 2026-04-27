@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect, memo } from 'react';
 import { Send, Sparkles, X, Volume2, VolumeX, Upload, FileText } from 'lucide-react';
+import { useEmotion } from '@/contexts/EmotionContext';
+import { parseAIResponse } from '@/services/actionParser';
+import Toast from './Toast';
 
 function ChatUI({
   currentEmotion,
@@ -17,6 +20,15 @@ function ChatUI({
   userEmail,
   userId,
 }) {
+  const { 
+    updateEmotion, 
+    addTask, 
+    toggleTask, 
+    deleteTask,
+    addChatMessage,
+    saveSession 
+  } = useEmotion();
+  
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,6 +38,7 @@ function ChatUI({
   const [extractedText, setExtractedText] = useState('');
   const [processingDocument, setProcessingDocument] = useState(false);
   const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+  const [toast, setToast] = useState(null);
   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -34,6 +47,15 @@ function ChatUI({
     // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Save session on unmount
+  useEffect(() => {
+    return () => {
+      if (messages.length > 0) {
+        saveSession(messages);
+      }
+    };
+  }, [messages, saveSession]);
 
   const shouldUseStructuredAssistant = Boolean(
     onSuggestionUpdate || onAddTask || onDeleteTask || behaviorPatterns || userProfile || tasks.length
@@ -183,6 +205,16 @@ function ChatUI({
 
       setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }]);
 
+      // Parse AI response for actions
+      const actions = parseAIResponse(assistantMessage);
+      actions.forEach(action => {
+        executeAction(action);
+      });
+
+      // Add to chat history
+      addChatMessage({ role: 'user', content: userMessage });
+      addChatMessage({ role: 'assistant', content: assistantMessage });
+
       // Text-to-Speech if enabled
       if (speechEnabled && window.speechSynthesis) {
         speak(assistantMessage);
@@ -283,6 +315,39 @@ function ChatUI({
     }
   };
 
+  const executeAction = (action) => {
+    switch (action.type) {
+      case 'SET_EMOTION':
+        updateEmotion(action.value);
+        if (onEmotionChange) onEmotionChange(action.value);
+        setToast({ message: `Emotion set to ${action.value}`, type: 'success' });
+        break;
+      case 'ADD_TASK':
+        addTask(action.task);
+        if (onAddTask) onAddTask(action.task.title, action.task.priority);
+        setToast({ message: `Task added: ${action.task.title}`, type: 'success' });
+        break;
+      case 'COMPLETE_TASK':
+        const taskToComplete = tasks.find(t => t.title.toLowerCase().includes(action.taskTitle.toLowerCase()));
+        if (taskToComplete) {
+          toggleTask(taskToComplete.id);
+          setToast({ message: `Task completed: ${taskToComplete.title}`, type: 'success' });
+        }
+        break;
+      case 'DELETE_TASK':
+        const taskToDelete = tasks.find(t => t.title.toLowerCase().includes(action.taskTitle.toLowerCase()));
+        if (taskToDelete) {
+          deleteTask(taskToDelete.id);
+          if (onDeleteTask) onDeleteTask(taskToDelete.id);
+          setToast({ message: `Task deleted: ${taskToDelete.title}`, type: 'info' });
+        }
+        break;
+      case 'SET_FOCUS_MODE':
+        // Focus mode handling can be added later
+        break;
+    }
+  };
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -325,6 +390,13 @@ function ChatUI({
 
   return (
     <div className="flex flex-col h-full bg-black/20">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       {/* Chat Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
         <div className="flex items-center gap-3">
