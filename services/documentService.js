@@ -54,18 +54,33 @@ async function extractFromTextFile(file) {
 
 /**
  * Extract text from PDF file
- * Note: Requires pdf-parse library
+ * Note: Uses browser-compatible pdfjs-dist
  */
 async function extractFromPDF(file) {
   try {
     // Dynamic import to avoid build issues
-    const pdfParse = (await import('pdf-parse')).default;
+    const pdfjsLib = await import('pdfjs-dist');
+    
+    // Set worker source
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    
     const arrayBuffer = await file.arrayBuffer();
-    const data = await pdfParse(arrayBuffer);
-    return data.text;
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    let fullText = '';
+    
+    // Extract text from all pages
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+    
+    return fullText;
   } catch (error) {
     console.error('PDF extraction error:', error);
-    throw new Error('PDF extraction failed. Make sure pdf-parse is installed.');
+    throw new Error('PDF extraction failed. Please try a different file.');
   }
 }
 
