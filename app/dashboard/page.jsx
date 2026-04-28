@@ -585,36 +585,6 @@ export default function DashboardPage() {
   const glowClass = currentEmotion ? getEmotionGlow(currentEmotion) : '';
   const gradientClass = currentEmotion ? getEmotionGradient(currentEmotion) : 'from-gray-900 via-purple-900 to-gray-900';
 
-  // Debug: log z-index hierarchy
-  useEffect(() => {
-    const checkBlockingElements = () => {
-      const allElements = document.querySelectorAll('*');
-      const blockingElements = [];
-      allElements.forEach(el => {
-        const styles = window.getComputedStyle(el);
-        const zIndex = styles.zIndex;
-        const position = styles.position;
-        const pointerEvents = styles.pointerEvents;
-        
-        if (zIndex !== 'auto' && Number(zIndex) > 0) {
-          if (position === 'fixed' || position === 'absolute') {
-            blockingElements.push({
-              tag: el.tagName,
-              class: el.className,
-              zIndex,
-              position,
-              pointerEvents
-            });
-          }
-        }
-      });
-      console.log('[DEBUG] Blocking elements:', blockingElements);
-    };
-    
-    // Check after render
-    setTimeout(checkBlockingElements, 100);
-  }, [showChat, automationAlert, showSuggestionModal, sidebarOpen]);
-
   return (
     <div className={`min-h-screen bg-gradient-to-br ${gradientClass} ${glowClass} transition-all duration-500 relative`}>
       <div className="flex flex-col lg:flex-row relative z-0">
