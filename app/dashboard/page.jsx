@@ -945,10 +945,12 @@ export default function DashboardPage() {
 
       {showChat && (
         <div 
-          className="fixed inset-0 lg:left-64 sm:lg:left-72 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-2 sm:p-4 pointer-events-none"
+          className="fixed top-0 right-0 bottom-0 w-full max-w-lg bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
+          onClick={toggleChat}
         >
           <div 
-            className="w-full max-w-lg h-full sm:h-auto max-h-screen overflow-y-auto pointer-events-auto"
+            className="w-full h-full sm:h-auto max-h-screen overflow-y-auto pointer-events-auto"
+            onClick={(e) => e.stopPropagation()}
           >
             <ChatUI
               tasks={tasks}

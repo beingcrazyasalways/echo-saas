@@ -392,7 +392,7 @@ function ChatUI({
   };
 
   return (
-    <div className="flex flex-col h-full bg-black/20">
+    <div className="flex flex-col h-full bg-black/20 relative z-10">
       {toast && (
         <Toast
           message={toast.message}
