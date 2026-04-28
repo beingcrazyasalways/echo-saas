@@ -985,6 +985,7 @@ export default function DashboardPage() {
               currentEmotion={currentEmotion}
               behaviorPatterns={behaviorPatterns}
               userProfile={userProfile}
+              onEmotionChange={updateEmotion}
               onSuggestionUpdate={(suggestion) => {
                 setChatSuggestion(suggestion);
                 setShowSuggestionModal(true);

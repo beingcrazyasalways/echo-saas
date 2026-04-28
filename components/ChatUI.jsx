@@ -323,8 +323,11 @@ function ChatUI({
         setToast({ message: `Emotion set to ${action.value}`, type: 'success' });
         break;
       case 'ADD_TASK':
-        addTask(action.task);
-        if (onAddTask) onAddTask(action.task.title, action.task.priority);
+        if (onAddTask) {
+          onAddTask(action.task.title, action.task.priority);
+        } else {
+          addTask(action.task);
+        }
         setToast({ message: `Task added: ${action.task.title}`, type: 'success' });
         break;
       case 'COMPLETE_TASK':
